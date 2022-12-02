@@ -28,14 +28,11 @@ import {
 import { XMLParser } from "fast-xml-parser";
 import { FileUploader } from "react-drag-drop-files";
 import axios from "axios";
-import {
-  ISSUER_ID,
-  POLYGON_API_BASE_URL,
-  SCHEMA_HASH_VERIFIED,
-} from "../consts";
+import { ISSUER_ID, POLYGON_API_BASE_URL, SCHEMA_ID } from "../consts";
 import { sha256 } from "js-sha256";
 import { SendCrypto } from "../components/send";
 import { About } from "../components/about";
+import { QRDialog } from "../components/QRDialog";
 
 const fileTypes = ["XML"];
 
@@ -111,7 +108,9 @@ export default function Home() {
       console.log("hashedDigest", hashedDigest);
 
       aadhaarHashedDigest = Number(
-        ethers.BigNumber.from("0x" + hashedDigest).toString()
+        // ethers.BigNumber.from("0x" + "6def8c7db01870f0e504707032d2e2093d0f339d").toString(),
+        ethers.BigNumber.from("0x" + "abcd328479234").toString()
+        // ethers.BigNumber.from("0x" + hashedDigest).toString()
       );
 
       // } catch (err) {
@@ -149,19 +148,19 @@ export default function Home() {
       // generate offer
       const offerRes = await axios({
         method: "post",
-        url: `${POLYGON_API_BASE_URL}/v1/issuers/${ISSUER_ID}/schemas/${SCHEMA_HASH_VERIFIED}/offers`,
+        url: `${POLYGON_API_BASE_URL}/v1/issuers/${ISSUER_ID}/schemas/${SCHEMA_ID}/offers`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
         data: {
           attributes: [
             {
-              attributeKey: "dateOfBirth",
-              attributeValue: dateOfBirth,
-            },
-            {
               attributeKey: "aadhaarNumber",
               attributeValue: aadhaarHashedDigest, // is actually hashed DigestValue
+            },
+            {
+              attributeKey: "verified",
+              attributeValue: 1,
             },
           ],
           limitedClaims: 1,
@@ -346,6 +345,8 @@ export default function Home() {
             </VStack>
           </Form>
         </Formik>
+
+        <QRDialog data={qrCodeData} />
 
         <SendCrypto />
         <About />

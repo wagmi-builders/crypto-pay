@@ -9,7 +9,6 @@ import { getDefaultWallets, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { chain, configureChains, createClient, WagmiConfig } from "wagmi";
 import { publicProvider } from "wagmi/providers/public";
 import { Global } from "@emotion/react";
-import Script from "next/script";
 
 const { chains, provider } = configureChains(
   [chain.polygon, chain.polygonMumbai],

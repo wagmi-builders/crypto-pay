@@ -2,25 +2,18 @@ import "react-phone-number-input/style.css";
 
 import Head from "next/head";
 
-import { ethers, BigNumber } from "ethers";
-import { SequencerProvider } from "starknet";
+import { ethers } from "ethers";
 import { useState } from "react";
 import { useProvider } from "wagmi";
-import { Tabs, TabList, TabPanels, Tab, TabPanel } from "@chakra-ui/react";
 
 import {
   Box,
   Button,
   Center,
-  FormControl,
   FormErrorMessage,
-  FormHelperText,
-  FormLabel,
   Heading,
   HStack,
-  Input,
   Link,
-  Select,
   Text,
   VStack,
 } from "@chakra-ui/react";
@@ -34,15 +27,15 @@ import {
 
 import { XMLParser } from "fast-xml-parser";
 import { FileUploader } from "react-drag-drop-files";
-import PhoneInput from "react-phone-number-input";
 import axios from "axios";
 import {
   ISSUER_ID,
   POLYGON_API_BASE_URL,
   SCHEMA_HASH_VERIFIED,
 } from "../consts";
-import { QRCodeSVG } from "qrcode.react";
 import { sha256 } from "js-sha256";
+import { SendCrypto } from "../components/send";
+import { About } from "../components/about";
 
 const fileTypes = ["XML"];
 
@@ -201,7 +194,7 @@ export default function Home() {
       // alert("error generating QR code");
       // }
     } catch (error) {
-      console.log("Unable to generate Proof in signup: ", error);
+      console.log("Unable to generate QR code for Claiming data: ", error);
     }
 
     setLoading(false);
@@ -219,34 +212,87 @@ export default function Home() {
         />
       </Head>
 
-      <Center
-        width={450}
-        height="100vh"
-        display="flex"
-        flexDirection="column"
-        mx="auto"
-      >
+      <Center width={450} display="flex" flexDirection="column" mx="auto">
         <HStack mt={20} mb={10} spacing={10}>
-          <Link href="/">Claim</Link>
-          <Link href="/about">Verify</Link>
+          <Text
+            _hover={{
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              document.querySelector("#claim")?.scrollIntoView({
+                behavior: "smooth",
+              });
+            }}
+          >
+            Claim
+          </Text>
+          <Text
+            _hover={{
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              document.querySelector("#verify")?.scrollIntoView({
+                behavior: "smooth",
+              });
+            }}
+          >
+            Verify
+          </Text>
+          <Text
+            _hover={{
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              document.querySelector("#send")?.scrollIntoView({
+                behavior: "smooth",
+              });
+            }}
+          >
+            Send Crypto
+          </Text>
+          <Text
+            // href="/#about"
+            _hover={{
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              document.querySelector("#about")?.scrollIntoView({
+                behavior: "smooth",
+              });
+            }}
+          >
+            About
+          </Text>
 
           {/* <Link href="/about">Send</Link> */}
         </HStack>
 
         <VStack mb="30" alignItems="center">
-          <Heading>eAadhaar</Heading>
+          <Heading id="claim">eAadhaar</Heading>
           <Text>
             Verify your Aadhaar on Blockchain with ZK technology using Polygon
             ID
           </Text>
         </VStack>
 
-        <FileUploader
-          multiple={true}
-          handleChange={handleChange}
-          name="file"
-          types={fileTypes}
-        />
+        <Box
+          css={{
+            width: "100%",
+            marginBottom: 20,
+
+            "& label": {
+              width: "100%",
+              border: "solid 2px lightgrey",
+            },
+          }}
+        >
+          <FileUploader
+            multiple={true}
+            handleChange={handleChange}
+            name="file"
+            types={fileTypes}
+          />
+        </Box>
 
         <Formik
           initialValues={{
@@ -260,44 +306,49 @@ export default function Home() {
               width: "100%",
             }}
           >
-            <Field name="mobileNumber">
-              {({ field, form }) => (
-                <CustomFormControl isRequired>
-                  <CustomFormLabel>Mobile Number</CustomFormLabel>
-                  <CustomInput
-                    {...field}
-                    type="number"
-                    placeholder="1234567890"
-                  />
-                  <FormErrorMessage>{form.errors.name}</FormErrorMessage>
-                </CustomFormControl>
-              )}
-            </Field>
+            <VStack spacing={10}>
+              <Field name="mobileNumber">
+                {({ field, form }) => (
+                  <CustomFormControl isRequired>
+                    <CustomFormLabel>Mobile Number</CustomFormLabel>
+                    <CustomInput
+                      {...field}
+                      type="number"
+                      placeholder="1234567890"
+                    />
+                    <FormErrorMessage>{form.errors.name}</FormErrorMessage>
+                  </CustomFormControl>
+                )}
+              </Field>
 
-            <Field name="aadhaarLastDigitsNumber">
-              {({ field, form }) => (
-                <CustomFormControl isRequired>
-                  <CustomFormLabel>
-                    Last Digit of Aadhaar Number
-                  </CustomFormLabel>
-                  <CustomInput {...field} type="number" placeholder="-" />
-                  <FormErrorMessage>{form.errors.name}</FormErrorMessage>
-                </CustomFormControl>
-              )}
-            </Field>
+              <Field name="aadhaarLastDigitsNumber">
+                {({ field, form }) => (
+                  <CustomFormControl isRequired>
+                    <CustomFormLabel>
+                      Last Digit of Aadhaar Number
+                    </CustomFormLabel>
+                    <CustomInput {...field} type="number" placeholder="-" />
+                    <FormErrorMessage>{form.errors.name}</FormErrorMessage>
+                  </CustomFormControl>
+                )}
+              </Field>
 
-            <Button
-              colorScheme="blue"
-              type="submit"
-              mt={50}
-              width="100%"
-              bg="#457B9D"
-              isLoading={loading}
-            >
-              Prove and Claim
-            </Button>
+              <Button
+                colorScheme="blue"
+                type="submit"
+                mt={50}
+                width="100%"
+                bg="#457B9D"
+                isLoading={loading}
+              >
+                Prove and Claim
+              </Button>
+            </VStack>
           </Form>
         </Formik>
+
+        <SendCrypto />
+        <About />
       </Center>
     </>
   );
@@ -309,3 +360,5 @@ function calculateAge(birthday: Date) {
 
   return Math.abs(ageDate.getUTCFullYear() - 1970);
 }
+
+// const FileUploaderDiv = emotion

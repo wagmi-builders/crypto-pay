@@ -3,6 +3,7 @@ import { SequencerProvider } from "starknet";
 import { useState } from "react";
 import { useProvider, useSigner } from "wagmi";
 
+import axios from "axios";
 import {
   Button,
   FormErrorMessage,
@@ -14,6 +15,8 @@ import {
 import { Field, Form, Formik } from "formik";
 
 import { CustomFormControl, CustomFormLabel, CustomInput } from "./Input";
+import { SERVER_URL } from "../consts";
+import { QRDialog } from "./QRDialog";
 
 export const SendCrypto = () => {
   const provider = useProvider();
@@ -21,12 +24,28 @@ export const SendCrypto = () => {
 
   const [loading, setLoading] = useState(false);
 
+  const [qrCodeData, setQRCodeData] = useState("");
+
   const onFormSignupSubmit = async (data) => {
     setLoading(true);
 
-    const { mobileNumber, amount, tokens } = data;
-
     try {
+      const { mobileNumber, amount, token } = data;
+      console.log("form inputs: ", { mobileNumber, amount, token });
+
+      const challangeRes = await axios({
+        method: "POST",
+        baseURL: `${SERVER_URL}/api/sign-in`,
+        data: {
+          recepientMobileNumber: mobileNumber,
+          amount,
+          token,
+        },
+      });
+
+      console.log("challangeRes: ", challangeRes);
+
+      setQRCodeData(JSON.stringify(challangeRes.data));
     } catch (error) {
       console.log("Unable to send Transaction: ", error);
     }
@@ -39,14 +58,16 @@ export const SendCrypto = () => {
         <Heading id="send">Send Crypto</Heading>
         <Text>
           Send crypto to eAadhaar verified address using their Phone Number
+          <br />
+          Phone number is hashed for security & privacy
         </Text>
-        <Text>Phone number is hashed for security & privacy</Text>
       </VStack>
 
       <Formik
         initialValues={{
           mobileNumber: "",
           amount: 0,
+          token: "0x0000000000000000000000000000000000001010-18",
         }}
         onSubmit={onFormSignupSubmit}
       >
@@ -55,7 +76,7 @@ export const SendCrypto = () => {
             width: "100%",
           }}
         >
-          <VStack spacing={18} alignItems="stretch">
+          <VStack spacing={18} mt={10} alignItems="stretch">
             <Field name="mobileNumber">
               {({ field, form }) => (
                 <CustomFormControl isRequired>
@@ -82,7 +103,7 @@ export const SendCrypto = () => {
               )}
             </Field>
 
-            <Field component="select" name="token">
+            <Field component="select" name="token" id="token" multiple={false}>
               {({ field, form }) => (
                 <>
                   <Select
@@ -106,17 +127,18 @@ export const SendCrypto = () => {
           </VStack>
 
           <Button
-            colorScheme="blue"
+            colorScheme="orange"
             type="submit"
             mt={50}
             width="100%"
-            bg="#457B9D"
             isLoading={loading}
           >
             Send
           </Button>
         </Form>
       </Formik>
+
+      <QRDialog data={qrCodeData} />
     </>
   );
 };

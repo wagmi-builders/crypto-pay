@@ -333,11 +333,10 @@ export default function Home() {
               </Field>
 
               <Button
-                colorScheme="blue"
+                colorScheme="orange"
                 type="submit"
                 mt={50}
                 width="100%"
-                bg="#457B9D"
                 isLoading={loading}
               >
                 Prove and Claim

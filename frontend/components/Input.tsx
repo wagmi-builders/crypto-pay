@@ -3,11 +3,8 @@ import { FormControl, FormLabel, Input } from "@chakra-ui/react";
 export const CustomInput = (props) => (
   <Input
     size="lg"
-    placeholder="+11 0123456789"
-    // bg="#FFF"
-    focusBorderColor="#1D3557"
-    errorBorderColor="#A83846"
-    borderRadius="0"
+    placeholder="--"
+    focusBorderColor="orange"
     borderWidth={2}
     textColor="#1D3557"
     {...props}

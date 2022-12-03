@@ -2,7 +2,7 @@
 
 // File solidity-bytes-utils/contracts/BytesLib.sol@v0.8.0
 
-// SPDX-License-Identifier: MIT
+
 /*
  * @title Solidity Bytes Arrays Utils
  * @author Gonçalo Sá <goncalo.sa@consensys.net>
@@ -698,7 +698,6 @@ library GenesisUtils {
 
 // File contracts/interfaces/ICircuitValidator.sol
 
-
 pragma solidity ^0.8.0;
 
 // Interface
@@ -744,7 +743,6 @@ interface ICircuitValidator {
 
 // File @openzeppelin/contracts/utils/Context.sol@v4.7.3
 
-
 // OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
 
 pragma solidity ^0.8.0;
@@ -771,7 +769,6 @@ abstract contract Context {
 
 
 // File @openzeppelin/contracts/access/Ownable.sol@v4.7.3
-
 
 // OpenZeppelin Contracts (last updated v4.7.0) (access/Ownable.sol)
 
@@ -855,9 +852,33 @@ abstract contract Ownable is Context {
 }
 
 
+// File contracts/Registry.sol
+
+pragma solidity 0.8.17;
+
+contract Registry is Ownable {
+
+    mapping(uint256 => uint256) public phone_to_aadhar;
+    mapping(uint256 => address) public aadhar_to_account;
+    mapping(uint256 => address) public phone_to_account;
+    mapping(address => uint256) public account_to_aadhar;
+
+    function registerUser(
+        uint256 _aadharNumberHash, 
+        uint256 _phoneNumberHash,
+        address _userAddress
+    ) external onlyOwner {
+        phone_to_aadhar[_phoneNumberHash] = _aadharNumberHash;
+        aadhar_to_account[_aadharNumberHash] = _userAddress;
+        phone_to_account[_phoneNumberHash] = _userAddress;
+        account_to_aadhar[_userAddress] = _aadharNumberHash;
+    } 
+}
+
+
 // File contracts/verifiers/ZKPVerifier.sol
 
-
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 // Imports
@@ -980,32 +1001,7 @@ contract ZKPVerifier is Ownable {
 }
 
 
-// File contracts/Registry.sol
-
-pragma solidity 0.8.17;
-
-contract Registry is Ownable {
-
-    mapping(uint256 => uint256) phone_to_aadhar;
-    mapping(uint256 => address) aadhar_to_account;
-    mapping(uint256 => address) phone_to_account;
-    mapping(address => uint256) account_to_aadhar;
-
-    function registerUser(
-        uint256 _aadharNumberHash, 
-        uint256 _phoneNumberHash,
-        address _userAddress
-    ) external onlyOwner {
-        phone_to_aadhar[_phoneNumberHash] = _aadharNumberHash;
-        aadhar_to_account[_aadharNumberHash] = _userAddress;
-        phone_to_account[_phoneNumberHash] = _userAddress;
-        account_to_aadhar[_userAddress] = _aadharNumberHash;
-    } 
-}
-
-
 // File @openzeppelin/contracts/token/ERC20/IERC20.sol@v4.7.3
-
 
 // OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)
 
@@ -1183,46 +1179,4 @@ contract PaymentGateway is ZKPVerifier, Registry {
             }
         } 
     }
-}
-
-
-// File contracts/interfaces/IZKPVerifier.sol
-
-
-pragma solidity ^0.8.0;
-
-// Imports
-// ========================================================
-
-// Interface
-// ========================================================
-interface IZKPVerifier {
-    /**
-     * @dev submitZKPResponse
-     */
-    function submitZKPResponse(
-        uint64 requestId,
-        uint256[] memory inputs,
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c,
-        bytes memory userInputs     // Added Extra parameter
-    ) external returns (bool);
-
-    /**
-     * @dev setZKPRequest
-     */
-    function setZKPRequest(
-        uint64 requestId,
-        ICircuitValidator validator,
-        ICircuitValidator.CircuitQuery memory query
-
-    ) external returns (bool);
-
-    /**
-     * @dev getZKPRequest
-     */
-    function getZKPRequest(uint64 requestId)
-        external
-        returns (ICircuitValidator.CircuitQuery memory);
 }

@@ -17,7 +17,7 @@ const main = async () => {
     const schemaHash = "0fab546bd9865813144e6bebcca107ed"; // extracted from PID Platform
 
     // Deployed contract address
-    const paymentGatewayAddress = "0x05782c1DB45A3cE232cC82D7726fcb30FB45Dd55";
+    const paymentGatewayAddress = "0x5E0E9d4418cF1b90B837B63d1507dF3Ec401aB16";
     const schemaEnd = fromLittleEndian(hexToBytes(schemaHash));
     const query = {
         schema: ethers.BigNumber.from(schemaEnd),

@@ -1,7 +1,10 @@
 {
   "name": "crypto-pay",
   "scripts": {
-    "compile": "npx hardhat compile"
+    "compile": "npx hardhat compile",
+    "deploy": "npx hardhat run scripts/paymentGatewayDeploy.ts --network mumbai",
+    "flatten": "npx hardhat flatten contracts/Payment.sol > flatten.sol",
+    "addRequest": "npx hardhat run scripts/paymentGatewayZKPRequest.ts --network mumbai"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.4.7",

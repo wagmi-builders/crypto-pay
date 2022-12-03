@@ -399,7 +399,7 @@ export default function Home() {
           </Formik>
 
           {/* TODO: uncomment */}
-          {/* <QRDialog data={qrCodeData} /> */}
+          <QRDialog data={qrCodeData} />
 
           <WhosVerified />
           <SendCrypto />

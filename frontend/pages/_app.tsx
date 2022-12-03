@@ -5,6 +5,15 @@ import "@rainbow-me/rainbowkit/styles.css";
 
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 
+import { sequenceWallet } from "@0xsequence/rainbowkit-plugin";
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
+import {
+  injectedWallet,
+  rainbowWallet,
+  walletConnectWallet,
+  metaMaskWallet,
+} from "@rainbow-me/rainbowkit/wallets";
+
 import { getDefaultWallets, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { chain, configureChains, createClient, WagmiConfig } from "wagmi";
 import { publicProvider } from "wagmi/providers/public";
@@ -15,10 +24,29 @@ const { chains, provider } = configureChains(
   [publicProvider()]
 );
 
-const { connectors } = getDefaultWallets({
-  appName: "eAadhaar",
-  chains,
-});
+// const { connectors } = getDefaultWallets({
+//   appName: "eAadhaar",
+//   chains,
+// });
+
+const connectors = connectorsForWallets([
+  {
+    groupName: "Recommended",
+    wallets: [
+      // sequenceWallet({
+      // chains,
+      // connect: {
+      // app: "eAadhaar",
+      // networkId: 137,
+      // },
+      // }),
+      metaMaskWallet({ chains }),
+      rainbowWallet({ chains }),
+      walletConnectWallet({ chains }),
+      injectedWallet({ chains }),
+    ],
+  },
+]);
 
 const wagmiClient = createClient({
   autoConnect: true,

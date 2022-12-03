@@ -41,11 +41,15 @@ import { Footer } from "../components/footer";
 import { WhosVerified } from "../components/whoVerified";
 import { PendingTransactions } from "../components/transactions";
 
+import { useAccount } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+
 const fileTypes = ["XML"];
 
 export default function Home() {
   const toast = useToast();
   const provider = useProvider();
+  const { address, isConnected } = useAccount();
 
   const [loading, setLoading] = useState(false);
 
@@ -302,15 +306,31 @@ export default function Home() {
                   )}
                 </Field>
 
-                <Button
-                  colorScheme="orange"
-                  type="submit"
-                  mt={50}
-                  width="100%"
-                  isLoading={loading}
-                >
-                  Prove and Claim
-                </Button>
+                <VStack spacing="10px" width="100%">
+                  <Box
+                    css={{
+                      width: "100%",
+
+                      button: {
+                        width: "100% !important",
+                        textAlign: "center !important",
+                        justifyContent: "center !important",
+                      },
+                    }}
+                  >
+                    <ConnectButton />
+                  </Box>
+
+                  <Button
+                    colorScheme="orange"
+                    type="submit"
+                    mt={50}
+                    width="100%"
+                    isLoading={loading}
+                  >
+                    Prove and Claim
+                  </Button>
+                </VStack>
               </VStack>
             </Form>
           </Formik>

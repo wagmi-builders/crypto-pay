@@ -15,6 +15,7 @@ export const PendingTransactions = () => {
   useEffect(() => {
     setInterval(() => {
       // setNoOfTxs()
+
     }, 3000);
   }, []);
 

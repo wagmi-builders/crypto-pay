@@ -6,3 +6,9 @@ export const SCHEMA_ID = "4524969f-206a-4d59-ae11-5590885cc1ad"; // for aadhaar 
 export const SERVER_URL = "http://localhost:8080"
 
 // export const SCHEMA_HASH_DATA = "";
+
+
+// contracts
+export const REGISTRY_CONTRACT_ADDRESS = ""
+export const PAYMENT_CONTRACT_ADDRESS = ""
+export const ZKPVERIFIER_CONTRACT_ADDRESS = ""

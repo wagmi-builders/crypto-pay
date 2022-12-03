@@ -51,7 +51,6 @@ contract Payment is ZKPVerifier, Registry {
     }
 
     // IMPLEMENTATION
-
     uint64 public constant TRANSFER_REQUEST_ID = 1;
 
     function submitTransferZKPResponse(

@@ -1,4 +1,3 @@
-import { ethers, BigNumber } from "ethers";
 import { useState } from "react";
 import { useProvider, useSigner } from "wagmi";
 import { Alert, AlertIcon } from "@chakra-ui/react";
@@ -15,6 +14,10 @@ import { Field, Form, Formik } from "formik";
 import { CustomFormControl, CustomFormLabel, CustomInput } from "./Input";
 import { useENS } from "../hooks/useENS";
 import { isAddress, isENSName, isLensHandle } from "../utils/helpers";
+import { ethers } from "ethers";
+import { REGISTRY_CONTRACT_ADDRESS } from "../consts";
+
+import REGISTRY_CONTRACT_ABI from "../../artifacts/contracts/Registry.sol/Registry.json";
 
 export const WhosVerified = () => {
   const provider = useProvider();
@@ -67,6 +70,16 @@ export const WhosVerified = () => {
       // TODO: fetch isVerified from Contract
       // ---------
       // ---------
+
+      const contract = new ethers.Contract(
+        REGISTRY_CONTRACT_ADDRESS,
+        REGISTRY_CONTRACT_ABI.abi,
+        provider
+      );
+
+      const value = contract.methods.account_to_aadhar[input];
+
+      console.log("value: ", value);
     } catch (error) {
       console.log("Unable to send Transaction: ", error);
     }

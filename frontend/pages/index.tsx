@@ -3,12 +3,19 @@ import "react-phone-number-input/style.css";
 import Head from "next/head";
 
 import { useState } from "react";
-import { useProvider } from "wagmi";
+import { useProvider, useSigner } from "wagmi";
 
 import { XMLParser } from "fast-xml-parser";
-import { ISSUER_ID, POLYGON_API_BASE_URL, SCHEMA_ID } from "../consts";
+import {
+  ISSUER_ID,
+  MAIN_CONTRACT,
+  POLYGON_API_BASE_URL,
+  REGISTRY_CONTRACT_ADDRESS,
+  SCHEMA_ID,
+} from "../consts";
 import { sha256 } from "js-sha256";
-import { ethers } from "ethers";
+import { ethers, BigNumber } from "ethers";
+import MAIN_CONTRACT_ABI from "../abi/main.json";
 
 import {
   Box,
@@ -44,11 +51,14 @@ import { PendingTransactions } from "../components/transactions";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
+import REGISTRY_CONTRACT_ABI from "../../artifacts/contracts/Registry.sol/Registry.json";
+
 const fileTypes = ["XML"];
 
 export default function Home() {
   const toast = useToast();
   const provider = useProvider();
+  const { data: signer } = useSigner();
   const { address, isConnected } = useAccount();
 
   const [loading, setLoading] = useState(false);
@@ -74,6 +84,18 @@ export default function Home() {
   };
 
   const onFormSubmit = async (data) => {
+    if (!isConnected) {
+      toast({
+        title: "Connect your Wallet",
+        // description: "We've created the Polygon ID Claim for you.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      return;
+    }
+
     setLoading(true);
 
     const { mobileNumber, aadhaarLastDigitsNumber } = data;
@@ -83,6 +105,8 @@ export default function Home() {
     let aadhaarHashedDigest; // in number
 
     let OFFER_ID: string;
+
+    const HASHED_MOBILE_NO = sha256(mobileNumber);
 
     // const tokenRes = await axios({
     // method: "POST",
@@ -132,9 +156,9 @@ export default function Home() {
       console.log("hashedDigest", hashedDigest);
 
       aadhaarHashedDigest = Number(
-        // ethers.BigNumber.from("0x" + "6def8c7db01870f0e504707032d2e2093d0f339d").toString(),
-        ethers.BigNumber.from("0x" + "abcd328479234").toString()
-        // ethers.BigNumber.from("0x" + hashedDigest).toString()
+        // BigNumber.from("0x" + "6def8c7db01870f0e504707032d2e2093d0f339d").toString(),
+        BigNumber.from("0x" + "abcd328479234").toString()
+        // BigNumber.from("0x" + hashedDigest).toString()
       );
 
       // } catch (err) {
@@ -190,19 +214,62 @@ export default function Home() {
           limitedClaims: 1,
         },
       });
+
+      console.log("data:", offerRes);
+      const offerIdString = offerRes.data.id;
+      OFFER_ID = offerIdString;
+      // } catch (err) {
+      // console.log("Failed generating claims, err: ", err);
+      // alert("Failed generating claims");
+      // }
+      // generate QR code
+      if (!OFFER_ID) return;
+      // get offer QR data
+      // try {
+      const offerQRRes = await axios.post(
+        `${POLYGON_API_BASE_URL}/v1/offers-qrcode/${OFFER_ID}`
+      );
+      console.log("offer res data: ", offerQRRes.data);
+      setQRCodeData(JSON.stringify(offerQRRes.data.qrcode));
+
+      // ---------------------------------------
+      // set contract data
+      const registryContract = new ethers.Contract(
+        MAIN_CONTRACT,
+        MAIN_CONTRACT_ABI,
+        signer
+      );
+
+      console.log("Registering user", {
+        hashedDigest,
+        HASHED_MOBILE_NO,
+        address,
+      });
+      console.log("Registering user", {
+        BigNumber.from(hashedDigest).toString(),
+        BigNumber.from(HASHED_MOBILE_NO).toString(),
+        address,
+      });
+      const data = await registryContract.registerUser(
+        hashedDigest,
+        HASHED_MOBILE_NO,
+        address
+      );
+
+      console.log("data", data);
+
+      toast({
+        title: "Aadhaar Card verified successfully",
+        description: "We've created the Polygon ID Claim for you.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
     } catch (error) {
       console.log("Unable to generate QR code for Claiming data: ", error);
     }
 
     setLoading(false);
-
-    toast({
-      title: "Aadhaar Card verified successfully",
-      description: "We've created the Polygon ID Claim for you.",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
   };
 
   return (
@@ -286,7 +353,8 @@ export default function Home() {
                       <CustomFormLabel>Mobile Number</CustomFormLabel>
                       <CustomInput
                         {...field}
-                        type="number"
+                        // type="number"
+                        type="tel"
                         placeholder="1234567890"
                       />
                       <FormErrorMessage>{form.errors.name}</FormErrorMessage>
@@ -327,6 +395,7 @@ export default function Home() {
                     mt={50}
                     width="100%"
                     isLoading={loading}
+                    // disabled={!isConnected}
                   >
                     Prove and Claim
                   </Button>

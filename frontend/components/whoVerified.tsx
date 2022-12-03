@@ -8,6 +8,7 @@ import {
   Heading,
   Text,
   VStack,
+  useToast,
 } from "@chakra-ui/react";
 import { Field, Form, Formik } from "formik";
 
@@ -15,11 +16,13 @@ import { CustomFormControl, CustomFormLabel, CustomInput } from "./Input";
 import { useENS } from "../hooks/useENS";
 import { isAddress, isENSName, isLensHandle } from "../utils/helpers";
 import { ethers } from "ethers";
-import { REGISTRY_CONTRACT_ADDRESS } from "../consts";
+import { MAIN_CONTRACT } from "../consts";
 
-import REGISTRY_CONTRACT_ABI from "../../artifacts/contracts/Registry.sol/Registry.json";
+import MAIN_CONTRACT_ABI from "../abi/main.json";
 
 export const WhosVerified = () => {
+  const toast = useToast();
+
   const provider = useProvider();
   const signer = useSigner();
 
@@ -72,14 +75,23 @@ export const WhosVerified = () => {
       // ---------
 
       const contract = new ethers.Contract(
-        REGISTRY_CONTRACT_ADDRESS,
-        REGISTRY_CONTRACT_ABI.abi,
+        MAIN_CONTRACT,
+        MAIN_CONTRACT_ABI,
         provider
       );
 
-      const value = contract.methods.account_to_aadhar[input];
+      console.log(contract.methods);
 
-      console.log("value: ", value);
+      const valueBG = await contract.account_to_aadhar(input);
+
+      const no = ethers.BigNumber.from(valueBG).toNumber();
+      console.log("value: ", no);
+
+      if (no === 1) {
+        setIsVerified(true);
+      } else if (no === 0) {
+        setIsVerified(false);
+      }
     } catch (error) {
       console.log("Unable to send Transaction: ", error);
     }
@@ -141,14 +153,14 @@ export const WhosVerified = () => {
       </Formik>
 
       {isVerified === false ? (
-        <Alert status="error">
+        <Alert status="error" mt="10px">
           <AlertIcon />
-          Na pal, looks like this address ain&abpos; E-Aadhaar verified
+          Na pal, looks like this address aint E-Aadhaar verif ied
         </Alert>
       ) : null}
 
       {isVerified === true ? (
-        <Alert status="success">
+        <Alert status="success" mt="10px">
           <AlertIcon />
           Lit, looks like this address is verified with E-Aadhaar verified
         </Alert>
@@ -158,6 +170,7 @@ export const WhosVerified = () => {
 };
 
 const IsThisPhoneVerified = () => {
+  const provider = useProvider();
   const [loading, setLoading] = useState(false);
 
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
@@ -175,6 +188,25 @@ const IsThisPhoneVerified = () => {
       // TODO: fetch isVerified from Contract
       // ---------
       // ---------
+
+      const contract = new ethers.Contract(
+        MAIN_CONTRACT,
+        MAIN_CONTRACT_ABI,
+        provider
+      );
+
+      console.log(contract.methods);
+
+      const valueBG = await contract.account_to_aadhar(input);
+
+      const no = ethers.BigNumber.from(valueBG).toNumber();
+      console.log("value: ", no);
+
+      if (no === 1) {
+        setIsVerified(true);
+      } else if (no === 0) {
+        setIsVerified(false);
+      }
     } catch (error) {
       console.log("Unable to send Transaction: ", error);
       setIsVerified(false);
@@ -226,14 +258,14 @@ const IsThisPhoneVerified = () => {
       </Formik>
 
       {isVerified === false ? (
-        <Alert status="error">
+        <Alert status="error" mt="10px">
           <AlertIcon />
-          Na pal, looks like this phone no. ain&abpos; E-Aadhaar verified
+          Na pal, looks like this phone no. aint E-Aadhaar verif ied
         </Alert>
       ) : null}
 
       {isVerified === true ? (
-        <Alert status="success">
+        <Alert status="success" mt="10px">
           <AlertIcon />
           Lit, looks like this phone no. is verified with E-Aadhaar verified
         </Alert>

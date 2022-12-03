@@ -20,7 +20,7 @@ import { publicProvider } from "wagmi/providers/public";
 import { Global } from "@emotion/react";
 
 const { chains, provider } = configureChains(
-  [chain.polygon, chain.polygonMumbai],
+  [chain.polygonMumbai, chain.polygon],
   [publicProvider()]
 );
 

@@ -183,131 +183,6 @@ interface ICircuitValidator {
 }
 
 
-// File contracts/verifiers/ZKPVerifier.sol
-
-
-pragma solidity ^0.8.0;
-
-// Imports
-// ========================================================
-
-
-// import "../interfaces/IZKPVerifier.sol";
-
-// Contract
-// ========================================================
-contract ZKPVerifier is Ownable {
-    // Variables
-    // msg.sender-> ( requestID -> is proof given )
-    mapping(address => mapping(uint64 => bool)) public proofs;
-    mapping(uint64 => ICircuitValidator.CircuitQuery) public requestQueries;
-    mapping(uint64 => ICircuitValidator) public requestValidators;
-    uint64[] public supportedRequests;
-
-    // Functions
-    /**
-     * @dev submitZKPResponse
-     */
-    function submitZKPResponse(
-        uint64 requestId,
-        uint256[] memory inputs,
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c
-    ) public returns (bool) {
-        require(
-            requestValidators[requestId] != ICircuitValidator(address(0)),
-            "validator is not set for this request id"
-        ); // validator exists
-        require(
-            requestQueries[requestId].schema != 0,
-            "query is not set for this request id"
-        ); // query exists
-
-        _beforeProofSubmit(requestId, inputs, requestValidators[requestId]);
-
-        require(
-            requestValidators[requestId].verify(
-                inputs,
-                a,
-                b,
-                c,
-                requestQueries[requestId]
-            ),
-            "proof response is not valid"
-        );
-
-        proofs[msg.sender][requestId] = true; // user provided a valid proof for request
-
-        _afterProofSubmit(requestId, inputs, requestValidators[requestId]);
-        return true;
-    }
-
-    /**
-     * @dev getZKPRequest
-     */
-    function getZKPRequest(uint64 requestId)
-        external
-        view
-        returns (ICircuitValidator.CircuitQuery memory)
-    {
-        return requestQueries[requestId];
-    }
-
-    /**
-     * @dev setZKPRequest
-     */
-    function setZKPRequest(
-        uint64 requestId,
-        ICircuitValidator validator,
-        ICircuitValidator.CircuitQuery memory query
-    ) external onlyOwner returns (bool) {
-        if (requestValidators[requestId] == ICircuitValidator(address(0x00))) {
-            supportedRequests.push(requestId);
-        }
-        requestQueries[requestId].value = query.value;
-        requestQueries[requestId].operator = query.operator;
-        requestQueries[requestId].circuitId = query.circuitId;
-        requestQueries[requestId].slotIndex = query.slotIndex;
-        requestQueries[requestId].schema = query.schema;
-
-        requestQueries[requestId].circuitId = query.circuitId;
-
-        requestValidators[requestId] = validator;
-        return true;
-    }
-
-    /**
-     * @dev getSupportedRequests
-     */
-    function getSupportedRequests()
-        external
-        view
-        returns (uint64[] memory arr)
-    {
-        return supportedRequests;
-    }
-
-    /**
-     * @dev Hook that is called before any proof response submit
-     */
-    function _beforeProofSubmit(
-        uint64 requestId,
-        uint256[] memory inputs,
-        ICircuitValidator validator
-    ) internal virtual {}
-
-    /**
-     * @dev Hook that is called after any proof response submit
-     */
-    function _afterProofSubmit(
-        uint64 requestId,
-        uint256[] memory inputs,
-        ICircuitValidator validator
-    ) internal virtual {}
-}
-
-
 // File solidity-bytes-utils/contracts/BytesLib.sol@v0.8.0
 
 
@@ -1004,6 +879,131 @@ library GenesisUtils {
 }
 
 
+// File contracts/verifiers/ZKPVerifier.sol
+
+
+pragma solidity ^0.8.0;
+
+// Imports
+// ========================================================
+
+
+// import "../interfaces/IZKPVerifier.sol";
+
+// Contract
+// ========================================================
+contract ZKPVerifier is Ownable {
+    // Variables
+    // msg.sender-> ( requestID -> is proof given )
+    mapping(address => mapping(uint64 => bool)) public proofs;
+    mapping(uint64 => ICircuitValidator.CircuitQuery) public requestQueries;
+    mapping(uint64 => ICircuitValidator) public requestValidators;
+    uint64[] public supportedRequests;
+
+    // Functions
+    /**
+     * @dev submitZKPResponse
+     */
+    function submitZKPResponse(
+        uint64 requestId,
+        uint256[] memory inputs,
+        uint256[2] memory a,
+        uint256[2][2] memory b,
+        uint256[2] memory c
+    ) public returns (bool) {
+        require(
+            requestValidators[requestId] != ICircuitValidator(address(0)),
+            "validator is not set for this request id"
+        ); // validator exists
+        require(
+            requestQueries[requestId].schema != 0,
+            "query is not set for this request id"
+        ); // query exists
+
+        _beforeProofSubmit(requestId, inputs, requestValidators[requestId]);
+
+        require(
+            requestValidators[requestId].verify(
+                inputs,
+                a,
+                b,
+                c,
+                requestQueries[requestId]
+            ),
+            "proof response is not valid"
+        );
+
+        proofs[msg.sender][requestId] = true; // user provided a valid proof for request
+
+        _afterProofSubmit(requestId, inputs, requestValidators[requestId]);
+        return true;
+    }
+
+    /**
+     * @dev getZKPRequest
+     */
+    function getZKPRequest(uint64 requestId)
+        external
+        view
+        returns (ICircuitValidator.CircuitQuery memory)
+    {
+        return requestQueries[requestId];
+    }
+
+    /**
+     * @dev setZKPRequest
+     */
+    function setZKPRequest(
+        uint64 requestId,
+        ICircuitValidator validator,
+        ICircuitValidator.CircuitQuery memory query
+    ) external onlyOwner returns (bool) {
+        if (requestValidators[requestId] == ICircuitValidator(address(0x00))) {
+            supportedRequests.push(requestId);
+        }
+        requestQueries[requestId].value = query.value;
+        requestQueries[requestId].operator = query.operator;
+        requestQueries[requestId].circuitId = query.circuitId;
+        requestQueries[requestId].slotIndex = query.slotIndex;
+        requestQueries[requestId].schema = query.schema;
+
+        requestQueries[requestId].circuitId = query.circuitId;
+
+        requestValidators[requestId] = validator;
+        return true;
+    }
+
+    /**
+     * @dev getSupportedRequests
+     */
+    function getSupportedRequests()
+        external
+        view
+        returns (uint64[] memory arr)
+    {
+        return supportedRequests;
+    }
+
+    /**
+     * @dev Hook that is called before any proof response submit
+     */
+    function _beforeProofSubmit(
+        uint64 requestId,
+        uint256[] memory inputs,
+        ICircuitValidator validator
+    ) internal virtual {}
+
+    /**
+     * @dev Hook that is called after any proof response submit
+     */
+    function _afterProofSubmit(
+        uint64 requestId,
+        uint256[] memory inputs,
+        ICircuitValidator validator
+    ) internal virtual {}
+}
+
+
 // File @openzeppelin/contracts/token/ERC20/IERC20.sol@v4.7.3
 
 
@@ -1138,6 +1138,9 @@ contract PaymentGateway is ZKPVerifier, Registry {
         queuedPayments[msg.sender][index].valid = false;
     }
 
+    function getQueuedPayments(address _user) external view returns(PaymentRecord[] memory) {
+        return queuedPayments[_user];
+    }
 
     function _beforeProofSubmit(
         uint64, /* requestId */

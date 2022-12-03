@@ -46,6 +46,9 @@ contract PaymentGateway is ZKPVerifier, Registry {
         queuedPayments[msg.sender][index].valid = false;
     }
 
+    function getQueuedPayments(address _user) external view returns(PaymentRecord[] memory) {
+        return queuedPayments[_user];
+    }
 
     function _beforeProofSubmit(
         uint64, /* requestId */

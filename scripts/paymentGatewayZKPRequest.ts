@@ -17,12 +17,12 @@ const main = async () => {
     const schemaHash = "0fab546bd9865813144e6bebcca107ed"; // extracted from PID Platform
 
     // Deployed contract address
-    const paymentGatewayAddress = "0xEaBD1017a3377fD3351262f0cb6A62e79EDeA5Ed";
+    const paymentGatewayAddress = "0x61A7c3E8Df018c4406dA3D1EB99Ad7598A9B8081";
     const schemaEnd = fromLittleEndian(hexToBytes(schemaHash));
     const query = {
         schema: ethers.BigNumber.from(schemaEnd),
         // slotIndex3 indicates the value stored as Attribute 2 inside the claim
-        slotIndex: 3,
+        slotIndex: 2,
         // see - https://0xpolygonid.github.io/tutorials/verifier/verification-library/zk-query-language/
         // 1 = equals
         // 2 = less-than

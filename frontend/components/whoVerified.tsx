@@ -83,6 +83,8 @@ export const WhosVerified = () => {
         </Text>
       </VStack>
 
+      <IsThisPhoneVerified />
+
       <Formik
         initialValues={{
           input: "",
@@ -119,7 +121,7 @@ export const WhosVerified = () => {
               width="100%"
               isLoading={loading}
             >
-              Check
+              Check Address
             </Button>
           </VStack>
         </Form>
@@ -136,6 +138,91 @@ export const WhosVerified = () => {
         <Alert status="success">
           <AlertIcon />
           Lit, looks like this address is verified with E-Aadhaar verified
+        </Alert>
+      ) : null}
+    </>
+  );
+};
+
+const IsThisPhoneVerified = () => {
+  const [loading, setLoading] = useState(false);
+
+  const [isVerified, setIsVerified] = useState<boolean | null>(null);
+
+  const onFormSubmit = async (data) => {
+    setLoading(true);
+
+    try {
+      // could
+      let { input } = data;
+      // setGlobalInput(input);
+
+      // setIsVerified(true)
+
+      // TODO: fetch isVerified from Contract
+      // ---------
+      // ---------
+    } catch (error) {
+      console.log("Unable to send Transaction: ", error);
+      setIsVerified(false);
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <>
+      <Formik
+        initialValues={{
+          input: "",
+        }}
+        onSubmit={onFormSubmit}
+      >
+        <Form
+          style={{
+            width: "100%",
+          }}
+        >
+          <VStack spacing={18} mt={10} alignItems="stretch">
+            <Field name="input">
+              {({ field, form }) => (
+                <CustomFormControl isRequired>
+                  <CustomFormLabel>Phone Number</CustomFormLabel>
+                  <CustomInput
+                    {...field}
+                    type="text"
+                    placeholder="1234567890"
+                  />
+                  {/* <FormHelperText>We'll never share your email.</FormHelperText> */}
+                  <FormErrorMessage>{form.errors.name}</FormErrorMessage>
+                </CustomFormControl>
+              )}
+            </Field>
+
+            <Button
+              colorScheme="orange"
+              type="submit"
+              mt={50}
+              width="100%"
+              isLoading={loading}
+            >
+              Check Phone No.
+            </Button>
+          </VStack>
+        </Form>
+      </Formik>
+
+      {isVerified === false ? (
+        <Alert status="error">
+          <AlertIcon />
+          Na pal, looks like this phone no. ain&abpos; E-Aadhaar verified
+        </Alert>
+      ) : null}
+
+      {isVerified === true ? (
+        <Alert status="success">
+          <AlertIcon />
+          Lit, looks like this phone no. is verified with E-Aadhaar verified
         </Alert>
       ) : null}
     </>

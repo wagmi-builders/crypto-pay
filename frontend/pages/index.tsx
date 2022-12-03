@@ -305,7 +305,7 @@ export default function Home() {
             <Heading id="claim">eAadhaar</Heading>
             <Text textAlign="center">
               Verify your Aadhaar on Blockchain and generate claims for your
-              data using Polygon ID.
+              data using <b>@Polygon ID</b>.
             </Text>
           </VStack>
 

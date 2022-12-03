@@ -1,9 +1,11 @@
 import { ethers, BigNumber } from "ethers";
 import { useState } from "react";
-import { useProvider, useSigner } from "wagmi";
+import { useProvider, useSigner, useAccount } from "wagmi";
 import { sha256 } from "js-sha256";
 
 import axios from "axios";
+import { erc20ABI } from "wagmi";
+
 import {
   Button,
   FormErrorMessage,
@@ -27,6 +29,7 @@ export const SendCrypto = () => {
   const toast = useToast();
 
   const provider = useProvider();
+  const { address } = useAccount();
   const { data: signer } = useSigner();
 
   const [loading, setLoading] = useState(false);
@@ -45,67 +48,87 @@ export const SendCrypto = () => {
     const { mobileNumber, amount, token } = data;
     const [tokenAddress, tokenDecimals] = token.split("-");
 
-    const contract = new ethers.Contract(
-      MAIN_CONTRACT,
-      MAIN_CONTRACT_ABI,
-      signer
-    );
+    try {
+      const contract = new ethers.Contract(
+        MAIN_CONTRACT,
+        MAIN_CONTRACT_ABI,
+        signer
+      );
 
-    let amountBigNum = BigNumber.from(amount).mul(
-      BigNumber.from(10).pow(BigNumber.from(tokenDecimals))
-    );
+      let amountBigNum = BigNumber.from(amount).mul(
+        BigNumber.from(10).pow(BigNumber.from(tokenDecimals))
+      );
 
-    console.log(
-      tokenAddress,
-      tokenDecimals,
-      amountBigNum.toString(),
-      mobileNumber,
-      amount,
-      signer
-    );
+      console.log(
+        tokenAddress,
+        tokenDecimals,
+        amountBigNum.toString(),
+        mobileNumber,
+        amount,
+        signer
+      );
 
-    const hashedPhoneNo = ethers.BigNumber.from(
-      "0x" + sha256(mobileNumber.toString())
-    ).toString();
+      const hashedPhoneNo = ethers.BigNumber.from(
+        "0x" + sha256(mobileNumber.toString())
+      ).toString();
 
-    console.log("hashedPhoneNo: ", hashedPhoneNo, mobileNumber);
+      console.log("hashedPhoneNo: ", hashedPhoneNo, mobileNumber);
 
-    const tx = await contract.queuePayment(
-      tokenAddress,
-      hashedPhoneNo,
-      amountBigNum.toString()
-      // signer
-    );
+      const tx = await contract.queuePayment(
+        tokenAddress,
+        hashedPhoneNo,
+        amountBigNum.toString(),
+        // signer
+        {
+          gasPrice: 50000000000,
+        }
+      );
 
-    // console.log("queued payment..");
+      // console.log("queued payment..");
 
-    // await signer.signMessage(sha256("abcd"));
+      // await signer.signMessage(sha256("abcd"));
 
-    // // toast({
-    // // title: "Transaction queued successfully!",
-    // // description: "Please scan the QR code to store your claim.",
-    // // status: "success",
-    // // duration: 3000,
-    // // isClosable: true,
-    // // });
+      // // toast({
+      // // title: "Transaction queued successfully!",
+      // // description: "Please scan the QR code to store your claim.",
+      // // status: "success",
+      // // duration: 3000,
+      // // isClosable: true,
+      // // });
 
-    // // await tx.wait()
-    // const d = await signer?.sendTransaction(tx);
-    // console.log("d", d);
+      // // await tx.wait()
+      // const d = await signer?.sendTransaction(tx);
+      // console.log("d", d);
 
-    await tx.wait();
+      console.log("Sent transaction to Queue payment", tx.hash);
 
-    toast({
-      title: "Transaction queued successfully!",
-      // description: "Please scan the QR code to store your claim.",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+      // after queuing
+      const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI, signer);
+      const approveTx = await erc20Contract.approve(
+        MAIN_CONTRACT,
+        amountBigNum,
+        {
+          gasPrice: 50000000000,
+        }
+      );
 
-    console.log("Sent transaction to Queue payment", tx.hash);
+      await tx.wait();
+      await approveTx.wait();
 
-    setLoading(false);
+      console.log("APPROVE TOKENS TX - tx.hash", tx.hash);
+
+      toast({
+        title: "Transaction queued successfully!",
+        // description: "Please scan the QR code to store your claim.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+    }
   };
 
   return (

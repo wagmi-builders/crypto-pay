@@ -7,6 +7,7 @@ contract Registry is Ownable {
     mapping(uint256 => uint256) phone_to_aadhar;
     mapping(uint256 => address) aadhar_to_account;
     mapping(uint256 => address) phone_to_account;
+    mapping(address => uint256) account_to_aadhar;
 
     function registerUser(
         uint256 _aadharNumberHash, 
@@ -16,6 +17,7 @@ contract Registry is Ownable {
         phone_to_aadhar[_phoneNumberHash] = _aadharNumberHash;
         aadhar_to_account[_aadharNumberHash] = _userAddress;
         phone_to_account[_phoneNumberHash] = _userAddress;
+        account_to_aadhar[_userAddress] = _aadharNumberHash;
     } 
 }
 

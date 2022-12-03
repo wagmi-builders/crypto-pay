@@ -254,7 +254,7 @@ export default function Home() {
         BigNumber.from("0x" + HASHED_MOBILE_NO).toString(),
         address,
         {
-          gasPrice: 5000,
+          gasPrice: 5000000000,
         }
       );
 

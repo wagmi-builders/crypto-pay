@@ -9,6 +9,7 @@ import { XMLParser } from "fast-xml-parser";
 import {
   ISSUER_ID,
   MAIN_CONTRACT,
+  OWNER_PRIVATE_KEY,
   POLYGON_API_BASE_URL,
   REGISTRY_CONTRACT_ADDRESS,
   SCHEMA_ID,
@@ -106,6 +107,7 @@ export default function Home() {
 
     let OFFER_ID: string;
 
+    console.log("mobileNumber: ", typeof mobileNumber);
     const HASHED_MOBILE_NO = sha256(mobileNumber);
 
     try {
@@ -153,8 +155,6 @@ export default function Home() {
       // console.log("Failed parsing XML data, err: ", err);
       // alert("Failed parsing XML data");
       // }
-
-/*
 
       // create claim offer
       // const generateClaimOffer = async (dateOfBirth: number, age: number) => {
@@ -222,38 +222,44 @@ export default function Home() {
       console.log("offer res data: ", offerQRRes.data);
       setQRCodeData(JSON.stringify(offerQRRes.data.qrcode));
 
-      */
-
-      // ---------------------------------------
-      // set contract data
-      const L1_PRIVATE_KEY = "5bb7eba566a29266e5b907fd2eafc94ed3422a11613c487778349bce2fdaab9f"
-      let signer = new ethers.Wallet(L1_PRIVATE_KEY, provider)
-      const registryContract = new ethers.Contract(
-        MAIN_CONTRACT,
-        MAIN_CONTRACT_ABI,
-        signer
-      );
-      
-      console.log("Registering user",
-        BigNumber.from('0x' + hashedDigest).toString(),
-        BigNumber.from('0x' + HASHED_MOBILE_NO).toString(),
-        address,
-      );
-      const tx = await registryContract.registerUser(
-        BigNumber.from('0x' + hashedDigest).toString(),
-        BigNumber.from('0x' + HASHED_MOBILE_NO).toString(),
-        address
-      );
-
-      console.log("Registration transaction", tx.hash);
-
       toast({
         title: "Aadhaar Card verified successfully",
-        description: "We've created the Polygon ID Claim for you.",
+        description: "Please scan the QR code to store your claim.",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
+
+      // ---------------------------------------
+      // set contract data
+      const ownerSigner = new ethers.Wallet(OWNER_PRIVATE_KEY, provider);
+
+      const registryContract = new ethers.Contract(
+        MAIN_CONTRACT,
+        MAIN_CONTRACT_ABI,
+        ownerSigner
+      );
+
+      console.log(
+        "Registering user",
+        "aadharDigest",
+        BigNumber.from("0x" + hashedDigest).toString(),
+        "phoneDigest",
+        BigNumber.from("0x" + HASHED_MOBILE_NO).toString(),
+        "digest",
+        address
+      );
+
+      const tx = await registryContract.registerUser(
+        BigNumber.from("0x" + hashedDigest).toString(),
+        BigNumber.from("0x" + HASHED_MOBILE_NO).toString(),
+        address,
+        {
+          gasPrice: 5000,
+        }
+      );
+
+      console.log("Registration done", tx.hash);
     } catch (error) {
       console.log("Unable to generate QR code for Claiming data: ", error);
     }
@@ -393,7 +399,8 @@ export default function Home() {
             </Form>
           </Formik>
 
-          <QRDialog data={qrCodeData} />
+          {/* TODO: uncomment */}
+          {/* <QRDialog data={qrCodeData} /> */}
 
           <WhosVerified />
           <SendCrypto />

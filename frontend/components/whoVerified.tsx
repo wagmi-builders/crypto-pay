@@ -11,11 +11,12 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { Field, Form, Formik } from "formik";
+import { sha256 } from "js-sha256";
 
 import { CustomFormControl, CustomFormLabel, CustomInput } from "./Input";
 import { useENS } from "../hooks/useENS";
 import { isAddress, isENSName, isLensHandle } from "../utils/helpers";
-import { ethers } from "ethers";
+import { BigNumber, constants, ethers } from "ethers";
 import { MAIN_CONTRACT } from "../consts";
 
 import MAIN_CONTRACT_ABI from "../abi/main.json";
@@ -31,20 +32,21 @@ export const WhosVerified = () => {
   const [globalInput, setGlobalInput] = useState("");
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
 
-  const { address: ensAddress } = useENS(globalInput);
+  // const { address: ensAddress } = useENS(globalInput);
 
   const onFormSubmit = async (data) => {
     setLoading(true);
+    setIsVerified(null);
 
     try {
       // could
       let { input } = data;
-      setGlobalInput(input);
+      // setGlobalInput(input);
 
-      if (isAddress(input) || isENSName(input)) {
-        console.log("IsAddress")
-        input = ensAddress;
-      }
+      // if (isAddress(input) || isENSName(input)) {
+      // console.log("IsAddress");
+      // input = ensAddress;
+      // }
 
       // if (isLensHandle(`${input}`)) {
       //   const res = await axios.request({
@@ -77,9 +79,16 @@ export const WhosVerified = () => {
         provider
       );
 
-      const aadhar = await contract.account_to_aadhar(input);
-   
-      if (aadhar === "0") {
+      // const hashedNo = ethers.BigNumber.from("0x" + sha256(input)).toString();
+      // console.log("hashedNo: ", hashedNo);
+
+      const exists = await contract.account_to_aadhar(input);
+
+      console.log("exists: ", exists);
+
+      // console.log(constants.Zero, constants.AddressZero)
+
+      if (ethers.BigNumber.from(exists).eq(constants.Zero)) {
         setIsVerified(false);
       } else {
         setIsVerified(true);
@@ -88,6 +97,7 @@ export const WhosVerified = () => {
       console.log("Unable to send Transaction: ", error);
     }
 
+    // setIsVerified(null);
     setLoading(false);
   };
 
@@ -147,7 +157,7 @@ export const WhosVerified = () => {
       {isVerified === false ? (
         <Alert status="error" mt="10px">
           <AlertIcon />
-          Na pal, looks like this address aint E-Aadhaar verified
+          Na pal, looks like this address aint E-Aadhaar verif ied
         </Alert>
       ) : null}
 
@@ -169,6 +179,7 @@ const IsThisPhoneVerified = () => {
 
   const onFormSubmit = async (data) => {
     setLoading(true);
+    setIsVerified(null);
 
     try {
       // could
@@ -187,10 +198,17 @@ const IsThisPhoneVerified = () => {
         provider
       );
 
-      console.log(contract.methods);
+      console.log("input:", input, sha256(input));
 
-      const account = await contract.phone_to_account(input);
-      if (account === "0") {
+      const hashedPhoneNo = ethers.BigNumber.from(
+        "0x" + sha256(input)
+      ).toString();
+      console.log("hashedPhoneNo: ", hashedPhoneNo);
+
+      const account = await contract.phone_to_account(hashedPhoneNo);
+      console.log("account: ", account);
+
+      if (ethers.BigNumber.from(account).eq(constants.Zero)) {
         setIsVerified(false);
       } else {
         setIsVerified(true);

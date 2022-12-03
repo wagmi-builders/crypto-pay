@@ -33,7 +33,14 @@ export const TXCard = ({
 
             <Box>
               <Heading size="sm">Phone no.</Heading>
-              <Text>{recepientAddress}</Text>
+              <Text
+                maxWidth="200px"
+                whiteSpace="nowrap"
+                overflow="hidden"
+                textOverflow="ellipsis"
+              >
+                {recepientAddress}
+              </Text>
             </Box>
 
             <Box>

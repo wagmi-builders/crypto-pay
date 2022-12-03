@@ -11,7 +11,6 @@ import {
   MAIN_CONTRACT,
   OWNER_PRIVATE_KEY,
   POLYGON_API_BASE_URL,
-  REGISTRY_CONTRACT_ADDRESS,
   SCHEMA_ID,
 } from "../consts";
 import { sha256 } from "js-sha256";

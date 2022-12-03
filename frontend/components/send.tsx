@@ -64,9 +64,15 @@ export const SendCrypto = () => {
       signer
     );
 
+    const hashedPhoneNo = ethers.BigNumber.from(
+      "0x" + sha256(mobileNumber.toString())
+    ).toString();
+
+    console.log("hashedPhoneNo: ", hashedPhoneNo, mobileNumber);
+
     const tx = await contract.queuePayment(
       tokenAddress,
-      mobileNumber,
+      hashedPhoneNo,
       amountBigNum.toString()
       // signer
     );

@@ -21,41 +21,40 @@ contract ZKPVerifier is Ownable {
     /**
      * @dev submitZKPResponse
      */
-    // function submitZKPResponse(
-    //     uint64 requestId,
-    //     uint256[] memory inputs,
-    //     uint256[2] memory a,
-    //     uint256[2][2] memory b,
-    //     uint256[2] memory c,
-    //     bytes memory userInputs
-    // ) public returns (bool) {
-    //     require(
-    //         requestValidators[requestId] != ICircuitValidator(address(0)),
-    //         "validator is not set for this request id"
-    //     ); // validator exists
-    //     require(
-    //         requestQueries[requestId].schema != 0,
-    //         "query is not set for this request id"
-    //     ); // query exists
+    function submitZKPResponse(
+        uint64 requestId,
+        uint256[] memory inputs,
+        uint256[2] memory a,
+        uint256[2][2] memory b,
+        uint256[2] memory c
+    ) public returns (bool) {
+        require(
+            requestValidators[requestId] != ICircuitValidator(address(0)),
+            "validator is not set for this request id"
+        ); // validator exists
+        require(
+            requestQueries[requestId].schema != 0,
+            "query is not set for this request id"
+        ); // query exists
 
-    //     _beforeProofSubmit(requestId, inputs, requestValidators[requestId], userInputs);
+        _beforeProofSubmit(requestId, inputs, requestValidators[requestId]);
 
-    //     require(
-    //         requestValidators[requestId].verify(
-    //             inputs,
-    //             a,
-    //             b,
-    //             c,
-    //             requestQueries[requestId]
-    //         ),
-    //         "proof response is not valid"
-    //     );
+        require(
+            requestValidators[requestId].verify(
+                inputs,
+                a,
+                b,
+                c,
+                requestQueries[requestId]
+            ),
+            "proof response is not valid"
+        );
 
-    //     proofs[msg.sender][requestId] = true; // user provided a valid proof for request
+        proofs[msg.sender][requestId] = true; // user provided a valid proof for request
 
-    //     _afterProofSubmit(requestId, inputs, requestValidators[requestId], userInputs);
-    //     return true;
-    // }
+        _afterProofSubmit(requestId, inputs, requestValidators[requestId]);
+        return true;
+    }
 
     /**
      * @dev getZKPRequest
@@ -108,8 +107,7 @@ contract ZKPVerifier is Ownable {
     function _beforeProofSubmit(
         uint64 requestId,
         uint256[] memory inputs,
-        ICircuitValidator validator,
-        bytes memory userInputs
+        ICircuitValidator validator
     ) internal virtual {}
 
     /**
@@ -118,7 +116,6 @@ contract ZKPVerifier is Ownable {
     function _afterProofSubmit(
         uint64 requestId,
         uint256[] memory inputs,
-        ICircuitValidator validator,
-        bytes memory userInputs
+        ICircuitValidator validator
     ) internal virtual {}
 }

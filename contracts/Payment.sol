@@ -7,71 +7,50 @@ import "./interfaces/ICircuitValidator.sol";
 import "./verifiers/ZKPVerifier.sol";
 import "./Registry.sol";
 
-contract Payment is ZKPVerifier, Registry {
+contract PaymentGateway is ZKPVerifier, Registry {
 
-   
-    // Functions
-    /**
-     * @dev submitZKPResponse
-     */
-    function submitZKPResponse(
-        uint64 requestId,
-        uint256[] memory inputs,
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c,
-        bytes memory userInputs     // Added extra parameter
-    ) public returns (bool) {
-        require(
-            requestValidators[requestId] != ICircuitValidator(address(0)),
-            "validator is not set for this request id"
-        ); // validator exists
-        require(
-            requestQueries[requestId].schema != 0,
-            "query is not set for this request id"
-        ); // query exists
-
-        _beforeProofSubmit(requestId, inputs, requestValidators[requestId], userInputs);
-
-        require(
-            requestValidators[requestId].verify(
-                inputs,
-                a,
-                b,
-                c,
-                requestQueries[requestId]
-            ),
-            "proof response is not valid"
-        );
-
-        proofs[msg.sender][requestId] = true; // user provided a valid proof for request
-
-        _afterProofSubmit(requestId, inputs, requestValidators[requestId], userInputs);
-        return true;
-    }
-
-    // IMPLEMENTATION
     uint64 public constant TRANSFER_REQUEST_ID = 1;
-
-    function submitTransferZKPResponse(
-        uint64 requestId,
-        uint256[] memory inputs,
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c,
-        IERC20 token,
-        uint256 recipientPhoneNumber,
-        uint256 amount
-    ) external returns (bool) {
-        bytes memory userInputs = abi.encode(token, recipientPhoneNumber, amount);
-        return submitZKPResponse(requestId, inputs, a, b, c, userInputs);
+    
+    struct PaymentRecord {
+        IERC20 token;
+        uint256 recipientPhoneNumber;
+        uint256 amount;
+        bool valid;
     }
+
+
+    mapping(address => PaymentRecord[]) queuedPayments;
+
+    function queuePayment(        
+        IERC20 _token,
+        uint256 _recipientPhoneNumber,
+        uint256 _amount
+    ) external {
+        queuedPayments[msg.sender].push(
+            PaymentRecord(
+                _token,
+                _recipientPhoneNumber,
+                _amount,
+                true
+            )
+        );
+    }
+
+    function removePaymentFromQueue(
+        uint256 index
+    ) external {
+        require(
+            queuedPayments[msg.sender][index].recipientPhoneNumber != 0, 
+            "Invalid index"
+        );
+        queuedPayments[msg.sender][index].valid = false;
+    }
+
 
     function _beforeProofSubmit(
         uint64, /* requestId */
         uint256[] memory inputs,
-        ICircuitValidator validator,
-        bytes memory /* userInputs */
+        ICircuitValidator validator
     ) internal override view  {
         // check that challenge input of the proof is equal to the msg.sender
         address addr = GenesisUtils.int256ToAddress(
@@ -85,38 +64,31 @@ contract Payment is ZKPVerifier, Registry {
 
     function _afterProofSubmit(
         uint64 requestId,
-        uint256[] memory /* inputs */,
-        ICircuitValidator /* validator */,
-        bytes memory userInputs
+        uint256[] memory, /* inputs */
+        ICircuitValidator /* validator */
     ) internal override {
         require(
             requestId == TRANSFER_REQUEST_ID,
             "!requestId"
         );
         
-        (address token, uint256 recipientPhoneNumber, uint256 amount) = abi.decode(
-            userInputs, 
-            (address, uint256, uint256)
-        );
-        
-        address recipientAddress = phone_to_account[recipientPhoneNumber];
+        // We execute the oldest valid payment record
+        // Follows FIFO (First in First out) order.
+        PaymentRecord[] memory payments = queuedPayments[msg.sender];
 
-        // execute the transfer
-        // Ensure the caller has approved sufficient tokens.
-        IERC20(token).transferFrom(_msgSender(), recipientAddress, amount);
+        for(uint256 i = 0; i < payments.length; i++) {
+            if (payments[i].valid) {
+                PaymentRecord memory currPayment = payments[i];
+                       
+                address recipientAddress = phone_to_account[currPayment.recipientPhoneNumber];
+
+                // execute the transfer
+                // Ensure the caller has approved sufficient tokens.
+                IERC20(currPayment.token).transferFrom(_msgSender(), recipientAddress, currPayment.amount);
+
+                // Set valid = false in the storage array
+                queuedPayments[msg.sender][i].valid = false;
+            }
+        } 
     }
-
 }
-
-
-// Register
-// Inputs
-// Claims
-// Claims will be scanned by the user
-// Stored in their polygon wallet
-// User wants to send a transaction with X calldata + a ZK proof
-// We ask the user to submit a proof as auth
-// We create the challenge and show it as a QR code
-// The user scans the QR code
-// Polygon wallet Id generates the required proof
-// Polygon wallet sends the transaction 

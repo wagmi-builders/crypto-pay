@@ -35,6 +35,9 @@ import { Header } from "../components/Header";
 import axios from "axios";
 
 import { useToast, Divider } from "@chakra-ui/react";
+import { UseCases } from "../components/UseCases";
+import { Footer } from "../components/footer";
+import { WhosVerified } from "../components/whoVerified";
 
 const fileTypes = ["XML"];
 
@@ -74,6 +77,18 @@ export default function Home() {
     let aadhaarHashedDigest; // in number
 
     let OFFER_ID: string;
+
+    // const tokenRes = await axios({
+    // method: "POST",
+    // baseURL: "/api/register",
+    // data: {
+    // fileContent,
+    // },
+    // });
+    //
+    // console.log("tokenRes", tokenRes);
+
+    // return;
 
     try {
       // 2) parse data from XML doc
@@ -212,7 +227,7 @@ export default function Home() {
         <Header />
 
         <VStack mb="30" alignItems="center">
-          <Heading id="claim">eAadhaar</Heading>
+          <Heading id="claim">-{/* eAadhaar */}</Heading>
           <Text>
             Verify your Aadhaar on Blockchain with ZK technology using Polygon
             ID
@@ -292,8 +307,11 @@ export default function Home() {
 
         <QRDialog data={qrCodeData} />
 
+        <WhosVerified />
         <SendCrypto />
         <About />
+        <UseCases />
+        <Footer />
       </Center>
     </>
   );

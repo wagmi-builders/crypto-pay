@@ -13,3 +13,8 @@ export const isENSName = (name: string): boolean => {
   const isEnsName = name.endsWith(".eth");
   return isEnsName;
 };
+
+export const isLensHandle = (name: string): boolean => {
+  const isEnsName = name.trimEnd().endsWith(".lens");
+  return isEnsName;
+};

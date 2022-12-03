@@ -84,6 +84,8 @@ export default async function generateClaim(
     },
   });
 
+  console.log("----------------------------", activeTokenRes.json());
+
   token = activeTokenRes.data.token || "";
   console.log("active token: ", activeTokenRes, token);
 
@@ -91,14 +93,14 @@ export default async function generateClaim(
 
   // generate offer
   const offerRes = await axios({
-    method: "POST",
+    method: "post",
     url: `${POLYGON_API_BASE_URL}/v1/issuers/${ISSUER_ID}/schemas/${SCHEMA_ID}/offers`,
     headers: {
       Authorization: `Bearer ${token}`,
-      Accept: "application/json",
+      //   Accept: "application/json",
 
-      //   "Content-Type": "application/json;charset=UTF-8",
-      //   "Access-Control-Allow-Origin": "*",
+      "Content-Type": "application/json;charset=UTF-8",
+      "Access-Control-Allow-Origin": "*",
     },
     data: {
       attributes: [
@@ -133,15 +135,12 @@ export default async function generateClaim(
     method: "POST",
     baseURL: `${POLYGON_API_BASE_URL}/v1/offers-qrcode/${OFFER_ID}`,
 
-    // headers: {
-    //   Authorization: `Bearer ${token}`,
-    //   Accept: "application/json",
-    // },
-    // baseURL: `${POLYGON_API_BASE_URL}/v1/offers-qrcode/${OFFER_ID}`,
-    // headers: {
-    //   "Content-Type": "application/json;charset=UTF-8",
-    //   "Access-Control-Allow-Origin": "*",
-    // },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      //   Accept: "application/json",
+      "Content-Type": "application/json;charset=UTF-8",
+      "Access-Control-Allow-Origin": "*",
+    },
   });
 
   console.log("offer res data: ", offerQRRes);

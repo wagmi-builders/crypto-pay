@@ -123,7 +123,7 @@ async function Callback(req, res) {
   const raw = await getRawBody(req);
   const tokenStr = raw.toString().trim();
 
-  console.log('tokenStr:', tokenStr)
+  console.log("tokenStr:", tokenStr);
 
   // fetch authRequest from sessionID
   const authRequest = requestMap.get(`${sessionId}`);

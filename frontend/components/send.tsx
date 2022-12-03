@@ -1,5 +1,4 @@
 import { ethers, BigNumber } from "ethers";
-import { SequencerProvider } from "starknet";
 import { useState } from "react";
 import { useProvider, useSigner } from "wagmi";
 

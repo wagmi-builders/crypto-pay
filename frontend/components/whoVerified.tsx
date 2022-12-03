@@ -121,7 +121,7 @@ export const WhosVerified = () => {
               width="100%"
               isLoading={loading}
             >
-              Check Address
+              Check ETH Address
             </Button>
           </VStack>
         </Form>

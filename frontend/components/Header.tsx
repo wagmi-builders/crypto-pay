@@ -4,6 +4,7 @@ export const Header = () => {
   return (
     <HStack mt={10} mb="80px" spacing={10}>
       <Text
+        fontWeight={500}
         _hover={{
           cursor: "pointer",
         }}

@@ -4,7 +4,7 @@ export const About = () => {
   return (
     <>
       <VStack mt={100}>
-        <Heading id="about">-{/* eAadhaar */}</Heading>
+        <Heading id="about">About</Heading>
         <Text>Brings privacy first KYC into Blockchain using Polygon ID</Text>
       </VStack>
 

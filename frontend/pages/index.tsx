@@ -18,6 +18,7 @@ import {
   Heading,
   Text,
   VStack,
+  Image,
 } from "@chakra-ui/react";
 import { Field, Form, Formik } from "formik";
 
@@ -38,6 +39,7 @@ import { useToast, Divider } from "@chakra-ui/react";
 import { UseCases } from "../components/UseCases";
 import { Footer } from "../components/footer";
 import { WhosVerified } from "../components/whoVerified";
+import { PendingTransactions } from "../components/transactions";
 
 const fileTypes = ["XML"];
 
@@ -212,106 +214,118 @@ export default function Home() {
       </Head>
 
       <Center
-        width={500}
-        display="flex"
-        flexDirection="column"
+        alignItems="flex-start"
+        justifyContent="center"
+        width="fit-content"
         mx="auto"
-        css={{
-          borderLeft: "1px solid #F1F1F1",
-          borderRight: "1px solid #F1F1F1",
-          padding: "0 40px",
-
-          boxShadow: "0px 0px 50px 1px rgba(0,0,0,0.05)",
-        }}
       >
-        <Header />
-
-        <VStack mb="30" alignItems="center">
-          <Heading id="claim">-{/* eAadhaar */}</Heading>
-          <Text>
-            Verify your Aadhaar on Blockchain with ZK technology using Polygon
-            ID
-          </Text>
-        </VStack>
+        <Image src="/left.png" alt="" width={300} height="100%" />
 
         <Box
+          width={500}
+          display="flex"
+          flexDirection="column"
+          mx="auto"
           css={{
-            width: "100%",
-            marginBottom: 20,
+            borderLeft: "1px solid #F1F1F1",
+            borderRight: "1px solid #F1F1F1",
+            padding: "0 40px",
 
-            "& label": {
-              width: "100%",
-              border: "solid 2px lightgrey",
-            },
+            boxShadow: "0px 0px 50px 1px rgba(0,0,0,0.05)",
           }}
         >
-          <FileUploader
-            multiple={true}
-            handleChange={handleChange}
-            name="file"
-            types={fileTypes}
-          />
-        </Box>
+          <Header />
 
-        <Formik
-          initialValues={{
-            mobileNumber: "",
-            aadhaarLastDigitsNumber: "",
-          }}
-          onSubmit={onFormSubmit}
-        >
-          <Form
-            style={{
+          <VStack mb="30" alignItems="center">
+            <Heading id="claim">eAadhaar</Heading>
+            <Text>
+              Verify your Aadhaar on Blockchain with ZK technology using Polygon
+              ID
+            </Text>
+          </VStack>
+
+          <Box
+            css={{
               width: "100%",
+              marginBottom: 20,
+
+              "& label": {
+                width: "100%",
+                border: "solid 2px lightgrey",
+              },
             }}
           >
-            <VStack spacing={10}>
-              <Field name="mobileNumber">
-                {({ field, form }) => (
-                  <CustomFormControl isRequired>
-                    <CustomFormLabel>Mobile Number</CustomFormLabel>
-                    <CustomInput
-                      {...field}
-                      type="number"
-                      placeholder="1234567890"
-                    />
-                    <FormErrorMessage>{form.errors.name}</FormErrorMessage>
-                  </CustomFormControl>
-                )}
-              </Field>
+            <FileUploader
+              multiple={true}
+              handleChange={handleChange}
+              name="file"
+              types={fileTypes}
+            />
+          </Box>
 
-              <Field name="aadhaarLastDigitsNumber">
-                {({ field, form }) => (
-                  <CustomFormControl isRequired>
-                    <CustomFormLabel>
-                      Last Digit of Aadhaar Number
-                    </CustomFormLabel>
-                    <CustomInput {...field} type="number" placeholder="-" />
-                    <FormErrorMessage>{form.errors.name}</FormErrorMessage>
-                  </CustomFormControl>
-                )}
-              </Field>
+          <Formik
+            initialValues={{
+              mobileNumber: "",
+              aadhaarLastDigitsNumber: "",
+            }}
+            onSubmit={onFormSubmit}
+          >
+            <Form
+              style={{
+                width: "100%",
+              }}
+            >
+              <VStack spacing={10}>
+                <Field name="mobileNumber">
+                  {({ field, form }) => (
+                    <CustomFormControl isRequired>
+                      <CustomFormLabel>Mobile Number</CustomFormLabel>
+                      <CustomInput
+                        {...field}
+                        type="number"
+                        placeholder="1234567890"
+                      />
+                      <FormErrorMessage>{form.errors.name}</FormErrorMessage>
+                    </CustomFormControl>
+                  )}
+                </Field>
 
-              <Button
-                colorScheme="orange"
-                type="submit"
-                mt={50}
-                width="100%"
-                isLoading={loading}
-              >
-                Prove and Claim
-              </Button>
-            </VStack>
-          </Form>
-        </Formik>
+                <Field name="aadhaarLastDigitsNumber">
+                  {({ field, form }) => (
+                    <CustomFormControl isRequired>
+                      <CustomFormLabel>
+                        Last Digit of Aadhaar Number
+                      </CustomFormLabel>
+                      <CustomInput {...field} type="number" placeholder="-" />
+                      <FormErrorMessage>{form.errors.name}</FormErrorMessage>
+                    </CustomFormControl>
+                  )}
+                </Field>
 
-        <QRDialog data={qrCodeData} />
+                <Button
+                  colorScheme="orange"
+                  type="submit"
+                  mt={50}
+                  width="100%"
+                  isLoading={loading}
+                >
+                  Prove and Claim
+                </Button>
+              </VStack>
+            </Form>
+          </Formik>
 
-        <WhosVerified />
-        <SendCrypto />
-        <About />
-        <UseCases />
-        <Footer />
+          <QRDialog data={qrCodeData} />
+
+          <WhosVerified />
+          <SendCrypto />
+          <PendingTransactions />
+          <About />
+          <UseCases />
+          <Footer />
+        </Box>
+
+        <Image src="/right.png" alt="" width={300} height="100%" />
       </Center>
     </>
   );

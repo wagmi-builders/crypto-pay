@@ -2,6 +2,7 @@ import { ethers, BigNumber } from "ethers";
 import { useState } from "react";
 import { useProvider, useSigner } from "wagmi";
 
+
 import axios from "axios";
 import {
   Button,
@@ -17,6 +18,10 @@ import { CustomFormControl, CustomFormLabel, CustomInput } from "./Input";
 import { SERVER_URL } from "../consts";
 import { QRDialog } from "./QRDialog";
 
+import { MAIN_CONTRACT } from "../consts";
+
+import MAIN_CONTRACT_ABI from "../abi/main.json";
+
 export const SendCrypto = () => {
   const provider = useProvider();
   const signer = useSigner();
@@ -28,26 +33,42 @@ export const SendCrypto = () => {
   const onFormSignupSubmit = async (data) => {
     setLoading(true);
 
-    try {
-      const { mobileNumber, amount, token } = data;
-      console.log("form inputs: ", { mobileNumber, amount, token });
+    // send transaction to add payment to queue
+    const { mobileNumber, amount, tokenData } = data;
+    const [tokenAddress, tokenDecimals] = tokenData.split("-")
+    console.log('here')
 
-      const challangeRes = await axios({
-        method: "POST",
-        baseURL: `${SERVER_URL}/api/sign-in`,
-        data: {
-          recepientMobileNumber: mobileNumber,
-          amount,
-          token,
-        },
-      });
+    const contract = new ethers.Contract(
+      MAIN_CONTRACT,
+      MAIN_CONTRACT_ABI,
+      provider
+    );
+    const L1_PRIVATE_KEY = '5bb7eba566a29266e5b907fd2eafc94ed3422a11613c487778349bce2fdaab9f'
+    const signer = new ethers.Wallet(
+      L1_PRIVATE_KEY,
+      provider
+    )
 
-      console.log("challangeRes: ", challangeRes);
+    let amountBigNum = BigNumber.from(amount).mul(BigNumber.from(10).pow(BigNumber.from(tokenDecimals)))
+    console.log(
+      tokenAddress,
+      tokenDecimals,
+      amountBigNum.toString(),
+      mobileNumber,
+      amount,
+      signer,
+    )
+    const tx = await contract.queuePayment(
+      tokenAddress,
+      mobileNumber,
+      amountBigNum.toString(),
+      signer,
+      {
+        gasLimit: "100000000000"  // 100 gwei
+      }
+    )
+    console.log("Sent transaction to Queue payment", tx.hash);
 
-      setQRCodeData(JSON.stringify(challangeRes.data));
-    } catch (error) {
-      console.log("Unable to send Transaction: ", error);
-    }
     setLoading(false);
   };
 

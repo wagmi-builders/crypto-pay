@@ -24,7 +24,7 @@ export const WhosVerified = () => {
   const toast = useToast();
 
   const provider = useProvider();
-  const signer = useSigner();
+  // const signer = useSigner();
 
   const [loading, setLoading] = useState(false);
 
@@ -42,37 +42,34 @@ export const WhosVerified = () => {
       setGlobalInput(input);
 
       if (isAddress(input) || isENSName(input)) {
+        console.log("IsAddress")
         input = ensAddress;
       }
 
-      if (isLensHandle(`${input}`)) {
-        const res = await axios.request({
-          method: "post",
-          url: "https://api.lens.dev/",
-          headers: {
-            "content-type": "application/json",
-          },
-          data: {
-            query: `
-                query Profile {
-                    profile(request: { handle: "${input}" }) {
-                      id
-                      name
-                      ownedBy
-                    }
-                }
-                `,
-          },
-        });
+      // if (isLensHandle(`${input}`)) {
+      //   const res = await axios.request({
+      //     method: "post",
+      //     url: "https://api.lens.dev/",
+      //     headers: {
+      //       "content-type": "application/json",
+      //     },
+      //     data: {
+      //       query: `
+      //           query Profile {
+      //               profile(request: { handle: "${input}" }) {
+      //                 id
+      //                 name
+      //                 ownedBy
+      //               }
+      //           }
+      //           `,
+      //     },
+      //   });
 
-        console.log("lens.dev res: ", res);
+      //   console.log("lens.dev res: ", res);
 
-        input = res.data.data.profile.ownedBy;
-      }
-
-      // TODO: fetch isVerified from Contract
-      // ---------
-      // ---------
+      //   input = res.data.data.profile.ownedBy;
+      // }
 
       const contract = new ethers.Contract(
         MAIN_CONTRACT,
@@ -80,17 +77,12 @@ export const WhosVerified = () => {
         provider
       );
 
-      console.log(contract.methods);
-
-      const valueBG = await contract.account_to_aadhar(input);
-
-      const no = ethers.BigNumber.from(valueBG).toNumber();
-      console.log("value: ", no);
-
-      if (no === 1) {
-        setIsVerified(true);
-      } else if (no === 0) {
+      const aadhar = await contract.account_to_aadhar(input);
+   
+      if (aadhar === "0") {
         setIsVerified(false);
+      } else {
+        setIsVerified(true);
       }
     } catch (error) {
       console.log("Unable to send Transaction: ", error);
@@ -155,14 +147,14 @@ export const WhosVerified = () => {
       {isVerified === false ? (
         <Alert status="error" mt="10px">
           <AlertIcon />
-          Na pal, looks like this address aint E-Aadhaar verif ied
+          Na pal, looks like this address aint E-Aadhaar verified
         </Alert>
       ) : null}
 
       {isVerified === true ? (
         <Alert status="success" mt="10px">
           <AlertIcon />
-          Lit, looks like this address is verified with E-Aadhaar verified
+          Lit, looks like this address is verified with E-Aadhaar!
         </Alert>
       ) : null}
     </>
@@ -197,15 +189,11 @@ const IsThisPhoneVerified = () => {
 
       console.log(contract.methods);
 
-      const valueBG = await contract.account_to_aadhar(input);
-
-      const no = ethers.BigNumber.from(valueBG).toNumber();
-      console.log("value: ", no);
-
-      if (no === 1) {
-        setIsVerified(true);
-      } else if (no === 0) {
+      const account = await contract.phone_to_account(input);
+      if (account === "0") {
         setIsVerified(false);
+      } else {
+        setIsVerified(true);
       }
     } catch (error) {
       console.log("Unable to send Transaction: ", error);
@@ -260,14 +248,14 @@ const IsThisPhoneVerified = () => {
       {isVerified === false ? (
         <Alert status="error" mt="10px">
           <AlertIcon />
-          Na pal, looks like this phone no. aint E-Aadhaar verif ied
+          Na pal, looks like this phone no. aint E-Aadhaar verified!
         </Alert>
       ) : null}
 
       {isVerified === true ? (
         <Alert status="success" mt="10px">
           <AlertIcon />
-          Lit, looks like this phone no. is verified with E-Aadhaar verified
+          Lit, looks like this phone no. is verified with E-Aadhaar!
         </Alert>
       ) : null}
     </>

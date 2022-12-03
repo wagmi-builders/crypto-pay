@@ -19,7 +19,7 @@ contract PaymentGateway is ZKPVerifier, Registry {
     }
 
 
-    mapping(address => PaymentRecord[]) queuedPayments;
+    mapping(address => PaymentRecord[]) public queuedPayments;
 
     function queuePayment(        
         IERC20 _token,

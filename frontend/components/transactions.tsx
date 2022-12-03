@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import {useProvider} from "wagmi";
+import {ethers, BigNumber} from "ethers";
 import { Heading, Text, VStack } from "@chakra-ui/react";
 import {
   Alert,
@@ -8,10 +10,77 @@ import {
   Button,
 } from "@chakra-ui/react";
 
+// import { QRCode } from 'react-qr-svg';
+// import proofRequest from '../../proofRequest';
+import { MAIN_CONTRACT } from "../consts";
+
+import MAIN_CONTRACT_ABI from "../abi/main.json";
+
+
+export const executeTransaction = () => {
+ 
+  let qrProofRequestJson: any = { ...proofRequest };
+  qrProofRequestJson.body.transaction_data.contract_address = MAIN_CONTRACT;
+  qrProofRequestJson.body.scope[0].rules.query.req = {
+    // NOTE: this value needs to match the Attribute name in https://platform-test.polygonid.com
+    "verified": {
+      "$eq": 1
+    }
+  };
+  // NOTE1: if you change this you need to resubmit the erc10|erc721ZKPRequest
+  // NOTE2: type is case-sensitive
+  qrProofRequestJson.body.scope[0].rules.query.schema = {
+    "url": "https://s3.eu-west-1.amazonaws.com/polygonid-schemas/642881e4-b68c-4721-81a6-98ac3b335869.json-ld",
+    "type": "dAadhaar"
+  };
+
+  // show the above QR code.
+  // const App = () => {
+
+  //   return (
+  //     <div className="App p-10">
+  //       <QRCode
+  //         level="Q"
+  //         style={{ width: 256 }}
+  //         value={JSON.stringify(qrProofRequestJson)}
+  //       />
+  //     </div>
+  //   )
+  // };
+}
+
 export const PendingTransactions = () => {
+  const provider = useProvider();
+
   const [loading, setLoading] = useState(false);
   const [noOfTxs, setNoOfTxs] = useState(0);
+  
+  const contract = new ethers.Contract(
+    MAIN_CONTRACT,
+    MAIN_CONTRACT_ABI,
+    provider
+  );
 
+  // // fetch queued payments
+  // const userAddress = '0x87ef4726e87a685f882861c3f14d397e293a1a5f';
+  // const index = 0;
+  // const pendingTransactionsForUser = await contract.queuedPayments(
+  //   userAddress,
+  //   index
+  // )
+  // console.log('pendingTransactionsForUser', pendingTransactionsForUser)
+
+  // // remove queued payments
+  // const L1_PRIVATE_KEY = ''
+  // const signer = new ethers.Wallet(
+  //   L1_PRIVATE_KEY,
+  //   provider
+  // )
+  // const tx = await contract.removePaymentFromQueue(
+  //   index,
+  //   signer
+  // )
+  
   useEffect(() => {
     setInterval(() => {
       // setNoOfTxs()

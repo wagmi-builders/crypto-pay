@@ -1,5 +1,313 @@
 // Sources flattened with hardhat v2.12.0 https://hardhat.org
 
+// File @openzeppelin/contracts/utils/Context.sol@v4.7.3
+
+// SPDX-License-Identifier: MIT
+// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
+
+pragma solidity ^0.8.0;
+
+/**
+ * @dev Provides information about the current execution context, including the
+ * sender of the transaction and its data. While these are generally available
+ * via msg.sender and msg.data, they should not be accessed in such a direct
+ * manner, since when dealing with meta-transactions the account sending and
+ * paying for execution may not be the actual sender (as far as an application
+ * is concerned).
+ *
+ * This contract is only required for intermediate, library-like contracts.
+ */
+abstract contract Context {
+    function _msgSender() internal view virtual returns (address) {
+        return msg.sender;
+    }
+
+    function _msgData() internal view virtual returns (bytes calldata) {
+        return msg.data;
+    }
+}
+
+
+// File @openzeppelin/contracts/access/Ownable.sol@v4.7.3
+
+
+// OpenZeppelin Contracts (last updated v4.7.0) (access/Ownable.sol)
+
+pragma solidity ^0.8.0;
+
+/**
+ * @dev Contract module which provides a basic access control mechanism, where
+ * there is an account (an owner) that can be granted exclusive access to
+ * specific functions.
+ *
+ * By default, the owner account will be the one that deploys the contract. This
+ * can later be changed with {transferOwnership}.
+ *
+ * This module is used through inheritance. It will make available the modifier
+ * `onlyOwner`, which can be applied to your functions to restrict their use to
+ * the owner.
+ */
+abstract contract Ownable is Context {
+    address private _owner;
+
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+    /**
+     * @dev Initializes the contract setting the deployer as the initial owner.
+     */
+    constructor() {
+        _transferOwnership(_msgSender());
+    }
+
+    /**
+     * @dev Throws if called by any account other than the owner.
+     */
+    modifier onlyOwner() {
+        _checkOwner();
+        _;
+    }
+
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view virtual returns (address) {
+        return _owner;
+    }
+
+    /**
+     * @dev Throws if the sender is not the owner.
+     */
+    function _checkOwner() internal view virtual {
+        require(owner() == _msgSender(), "Ownable: caller is not the owner");
+    }
+
+    /**
+     * @dev Leaves the contract without owner. It will not be possible to call
+     * `onlyOwner` functions anymore. Can only be called by the current owner.
+     *
+     * NOTE: Renouncing ownership will leave the contract without an owner,
+     * thereby removing any functionality that is only available to the owner.
+     */
+    function renounceOwnership() public virtual onlyOwner {
+        _transferOwnership(address(0));
+    }
+
+    /**
+     * @dev Transfers ownership of the contract to a new account (`newOwner`).
+     * Can only be called by the current owner.
+     */
+    function transferOwnership(address newOwner) public virtual onlyOwner {
+        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        _transferOwnership(newOwner);
+    }
+
+    /**
+     * @dev Transfers ownership of the contract to a new account (`newOwner`).
+     * Internal function without access restriction.
+     */
+    function _transferOwnership(address newOwner) internal virtual {
+        address oldOwner = _owner;
+        _owner = newOwner;
+        emit OwnershipTransferred(oldOwner, newOwner);
+    }
+}
+
+
+// File contracts/Registry.sol
+
+pragma solidity 0.8.17;
+
+contract Registry is Ownable {
+
+    mapping(uint256 => uint256) public phone_to_aadhar;
+    mapping(uint256 => address) public aadhar_to_account;
+    mapping(uint256 => address) public phone_to_account;
+    mapping(address => uint256) public account_to_aadhar;
+
+    function registerUser(
+        uint256 _aadharNumberHash, 
+        uint256 _phoneNumberHash,
+        address _userAddress
+    ) external onlyOwner {
+        phone_to_aadhar[_phoneNumberHash] = _aadharNumberHash;
+        aadhar_to_account[_aadharNumberHash] = _userAddress;
+        phone_to_account[_phoneNumberHash] = _userAddress;
+        account_to_aadhar[_userAddress] = _aadharNumberHash;
+    } 
+}
+
+
+// File contracts/interfaces/ICircuitValidator.sol
+
+
+pragma solidity ^0.8.0;
+
+// Interface
+// ========================================================
+interface ICircuitValidator {
+    // Variables
+    struct CircuitQuery {
+        uint256 schema;
+        uint256 slotIndex;
+        uint256 operator;
+        uint256[] value;
+        string circuitId;
+    }
+
+    /**
+     * @dev verify
+     */
+    function verify(
+        uint256[] memory inputs,
+        uint256[2] memory a,
+        uint256[2][2] memory b,
+        uint256[2] memory c,
+        CircuitQuery memory query
+    ) external view returns (bool r);
+
+    /**
+     * @dev getCircuitId
+     */
+    function getCircuitId() external pure returns (string memory id);
+
+    /**
+     * @dev getChallengeInputIndex
+     */
+    function getChallengeInputIndex() external pure returns (uint256 index);
+
+    // TODO: FIGURE OUT WHAT DOES THIS MEAN?
+    /**
+     * @dev getUserIdInputIndex
+     */
+    function getUserIdInputIndex() external pure returns (uint256 index);
+}
+
+
+// File contracts/verifiers/ZKPVerifier.sol
+
+
+pragma solidity ^0.8.0;
+
+// Imports
+// ========================================================
+
+
+// import "../interfaces/IZKPVerifier.sol";
+
+// Contract
+// ========================================================
+contract ZKPVerifier is Ownable {
+    // Variables
+    // msg.sender-> ( requestID -> is proof given )
+    mapping(address => mapping(uint64 => bool)) public proofs;
+    mapping(uint64 => ICircuitValidator.CircuitQuery) public requestQueries;
+    mapping(uint64 => ICircuitValidator) public requestValidators;
+    uint64[] public supportedRequests;
+
+    // Functions
+    /**
+     * @dev submitZKPResponse
+     */
+    function submitZKPResponse(
+        uint64 requestId,
+        uint256[] memory inputs,
+        uint256[2] memory a,
+        uint256[2][2] memory b,
+        uint256[2] memory c
+    ) public returns (bool) {
+        require(
+            requestValidators[requestId] != ICircuitValidator(address(0)),
+            "validator is not set for this request id"
+        ); // validator exists
+        require(
+            requestQueries[requestId].schema != 0,
+            "query is not set for this request id"
+        ); // query exists
+
+        _beforeProofSubmit(requestId, inputs, requestValidators[requestId]);
+
+        require(
+            requestValidators[requestId].verify(
+                inputs,
+                a,
+                b,
+                c,
+                requestQueries[requestId]
+            ),
+            "proof response is not valid"
+        );
+
+        proofs[msg.sender][requestId] = true; // user provided a valid proof for request
+
+        _afterProofSubmit(requestId, inputs, requestValidators[requestId]);
+        return true;
+    }
+
+    /**
+     * @dev getZKPRequest
+     */
+    function getZKPRequest(uint64 requestId)
+        external
+        view
+        returns (ICircuitValidator.CircuitQuery memory)
+    {
+        return requestQueries[requestId];
+    }
+
+    /**
+     * @dev setZKPRequest
+     */
+    function setZKPRequest(
+        uint64 requestId,
+        ICircuitValidator validator,
+        ICircuitValidator.CircuitQuery memory query
+    ) external onlyOwner returns (bool) {
+        if (requestValidators[requestId] == ICircuitValidator(address(0x00))) {
+            supportedRequests.push(requestId);
+        }
+        requestQueries[requestId].value = query.value;
+        requestQueries[requestId].operator = query.operator;
+        requestQueries[requestId].circuitId = query.circuitId;
+        requestQueries[requestId].slotIndex = query.slotIndex;
+        requestQueries[requestId].schema = query.schema;
+
+        requestQueries[requestId].circuitId = query.circuitId;
+
+        requestValidators[requestId] = validator;
+        return true;
+    }
+
+    /**
+     * @dev getSupportedRequests
+     */
+    function getSupportedRequests()
+        external
+        view
+        returns (uint64[] memory arr)
+    {
+        return supportedRequests;
+    }
+
+    /**
+     * @dev Hook that is called before any proof response submit
+     */
+    function _beforeProofSubmit(
+        uint64 requestId,
+        uint256[] memory inputs,
+        ICircuitValidator validator
+    ) internal virtual {}
+
+    /**
+     * @dev Hook that is called after any proof response submit
+     */
+    function _afterProofSubmit(
+        uint64 requestId,
+        uint256[] memory inputs,
+        ICircuitValidator validator
+    ) internal virtual {}
+}
+
+
 // File solidity-bytes-utils/contracts/BytesLib.sol@v0.8.0
 
 
@@ -696,312 +1004,8 @@ library GenesisUtils {
 }
 
 
-// File contracts/interfaces/ICircuitValidator.sol
-
-pragma solidity ^0.8.0;
-
-// Interface
-// ========================================================
-interface ICircuitValidator {
-    // Variables
-    struct CircuitQuery {
-        uint256 schema;
-        uint256 slotIndex;
-        uint256 operator;
-        uint256[] value;
-        string circuitId;
-    }
-
-    /**
-     * @dev verify
-     */
-    function verify(
-        uint256[] memory inputs,
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c,
-        CircuitQuery memory query
-    ) external view returns (bool r);
-
-    /**
-     * @dev getCircuitId
-     */
-    function getCircuitId() external pure returns (string memory id);
-
-    /**
-     * @dev getChallengeInputIndex
-     */
-    function getChallengeInputIndex() external pure returns (uint256 index);
-
-    // TODO: FIGURE OUT WHAT DOES THIS MEAN?
-    /**
-     * @dev getUserIdInputIndex
-     */
-    function getUserIdInputIndex() external pure returns (uint256 index);
-}
-
-
-// File @openzeppelin/contracts/utils/Context.sol@v4.7.3
-
-// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
-
-pragma solidity ^0.8.0;
-
-/**
- * @dev Provides information about the current execution context, including the
- * sender of the transaction and its data. While these are generally available
- * via msg.sender and msg.data, they should not be accessed in such a direct
- * manner, since when dealing with meta-transactions the account sending and
- * paying for execution may not be the actual sender (as far as an application
- * is concerned).
- *
- * This contract is only required for intermediate, library-like contracts.
- */
-abstract contract Context {
-    function _msgSender() internal view virtual returns (address) {
-        return msg.sender;
-    }
-
-    function _msgData() internal view virtual returns (bytes calldata) {
-        return msg.data;
-    }
-}
-
-
-// File @openzeppelin/contracts/access/Ownable.sol@v4.7.3
-
-// OpenZeppelin Contracts (last updated v4.7.0) (access/Ownable.sol)
-
-pragma solidity ^0.8.0;
-
-/**
- * @dev Contract module which provides a basic access control mechanism, where
- * there is an account (an owner) that can be granted exclusive access to
- * specific functions.
- *
- * By default, the owner account will be the one that deploys the contract. This
- * can later be changed with {transferOwnership}.
- *
- * This module is used through inheritance. It will make available the modifier
- * `onlyOwner`, which can be applied to your functions to restrict their use to
- * the owner.
- */
-abstract contract Ownable is Context {
-    address private _owner;
-
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
-    /**
-     * @dev Initializes the contract setting the deployer as the initial owner.
-     */
-    constructor() {
-        _transferOwnership(_msgSender());
-    }
-
-    /**
-     * @dev Throws if called by any account other than the owner.
-     */
-    modifier onlyOwner() {
-        _checkOwner();
-        _;
-    }
-
-    /**
-     * @dev Returns the address of the current owner.
-     */
-    function owner() public view virtual returns (address) {
-        return _owner;
-    }
-
-    /**
-     * @dev Throws if the sender is not the owner.
-     */
-    function _checkOwner() internal view virtual {
-        require(owner() == _msgSender(), "Ownable: caller is not the owner");
-    }
-
-    /**
-     * @dev Leaves the contract without owner. It will not be possible to call
-     * `onlyOwner` functions anymore. Can only be called by the current owner.
-     *
-     * NOTE: Renouncing ownership will leave the contract without an owner,
-     * thereby removing any functionality that is only available to the owner.
-     */
-    function renounceOwnership() public virtual onlyOwner {
-        _transferOwnership(address(0));
-    }
-
-    /**
-     * @dev Transfers ownership of the contract to a new account (`newOwner`).
-     * Can only be called by the current owner.
-     */
-    function transferOwnership(address newOwner) public virtual onlyOwner {
-        require(newOwner != address(0), "Ownable: new owner is the zero address");
-        _transferOwnership(newOwner);
-    }
-
-    /**
-     * @dev Transfers ownership of the contract to a new account (`newOwner`).
-     * Internal function without access restriction.
-     */
-    function _transferOwnership(address newOwner) internal virtual {
-        address oldOwner = _owner;
-        _owner = newOwner;
-        emit OwnershipTransferred(oldOwner, newOwner);
-    }
-}
-
-
-// File contracts/Registry.sol
-
-pragma solidity 0.8.17;
-
-contract Registry is Ownable {
-
-    mapping(uint256 => uint256) public phone_to_aadhar;
-    mapping(uint256 => address) public aadhar_to_account;
-    mapping(uint256 => address) public phone_to_account;
-    mapping(address => uint256) public account_to_aadhar;
-
-    function registerUser(
-        uint256 _aadharNumberHash, 
-        uint256 _phoneNumberHash,
-        address _userAddress
-    ) external onlyOwner {
-        phone_to_aadhar[_phoneNumberHash] = _aadharNumberHash;
-        aadhar_to_account[_aadharNumberHash] = _userAddress;
-        phone_to_account[_phoneNumberHash] = _userAddress;
-        account_to_aadhar[_userAddress] = _aadharNumberHash;
-    } 
-}
-
-
-// File contracts/verifiers/ZKPVerifier.sol
-
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
-// Imports
-// ========================================================
-
-
-// import "../interfaces/IZKPVerifier.sol";
-
-// Contract
-// ========================================================
-contract ZKPVerifier is Ownable {
-    // Variables
-    // msg.sender-> ( requestID -> is proof given )
-    mapping(address => mapping(uint64 => bool)) public proofs;
-    mapping(uint64 => ICircuitValidator.CircuitQuery) public requestQueries;
-    mapping(uint64 => ICircuitValidator) public requestValidators;
-    uint64[] public supportedRequests;
-
-    // Functions
-    /**
-     * @dev submitZKPResponse
-     */
-    function submitZKPResponse(
-        uint64 requestId,
-        uint256[] memory inputs,
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c
-    ) public returns (bool) {
-        require(
-            requestValidators[requestId] != ICircuitValidator(address(0)),
-            "validator is not set for this request id"
-        ); // validator exists
-        require(
-            requestQueries[requestId].schema != 0,
-            "query is not set for this request id"
-        ); // query exists
-
-        _beforeProofSubmit(requestId, inputs, requestValidators[requestId]);
-
-        require(
-            requestValidators[requestId].verify(
-                inputs,
-                a,
-                b,
-                c,
-                requestQueries[requestId]
-            ),
-            "proof response is not valid"
-        );
-
-        proofs[msg.sender][requestId] = true; // user provided a valid proof for request
-
-        _afterProofSubmit(requestId, inputs, requestValidators[requestId]);
-        return true;
-    }
-
-    /**
-     * @dev getZKPRequest
-     */
-    function getZKPRequest(uint64 requestId)
-        external
-        view
-        returns (ICircuitValidator.CircuitQuery memory)
-    {
-        return requestQueries[requestId];
-    }
-
-    /**
-     * @dev setZKPRequest
-     */
-    function setZKPRequest(
-        uint64 requestId,
-        ICircuitValidator validator,
-        ICircuitValidator.CircuitQuery memory query
-    ) external onlyOwner returns (bool) {
-        if (requestValidators[requestId] == ICircuitValidator(address(0x00))) {
-            supportedRequests.push(requestId);
-        }
-        requestQueries[requestId].value = query.value;
-        requestQueries[requestId].operator = query.operator;
-        requestQueries[requestId].circuitId = query.circuitId;
-        requestQueries[requestId].slotIndex = query.slotIndex;
-        requestQueries[requestId].schema = query.schema;
-
-        requestQueries[requestId].circuitId = query.circuitId;
-
-        requestValidators[requestId] = validator;
-        return true;
-    }
-
-    /**
-     * @dev getSupportedRequests
-     */
-    function getSupportedRequests()
-        external
-        view
-        returns (uint64[] memory arr)
-    {
-        return supportedRequests;
-    }
-
-    /**
-     * @dev Hook that is called before any proof response submit
-     */
-    function _beforeProofSubmit(
-        uint64 requestId,
-        uint256[] memory inputs,
-        ICircuitValidator validator
-    ) internal virtual {}
-
-    /**
-     * @dev Hook that is called after any proof response submit
-     */
-    function _afterProofSubmit(
-        uint64 requestId,
-        uint256[] memory inputs,
-        ICircuitValidator validator
-    ) internal virtual {}
-}
-
-
 // File @openzeppelin/contracts/token/ERC20/IERC20.sol@v4.7.3
+
 
 // OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)
 
@@ -1107,7 +1111,7 @@ contract PaymentGateway is ZKPVerifier, Registry {
     }
 
 
-    mapping(address => PaymentRecord[]) queuedPayments;
+    mapping(address => PaymentRecord[]) public queuedPayments;
 
     function queuePayment(        
         IERC20 _token,

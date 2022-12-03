@@ -108,18 +108,6 @@ export default function Home() {
 
     const HASHED_MOBILE_NO = sha256(mobileNumber);
 
-    // const tokenRes = await axios({
-    // method: "POST",
-    // baseURL: "/api/register",
-    // data: {
-    // fileContent,
-    // },
-    // });
-    //
-    // console.log("tokenRes", tokenRes);
-
-    // return;
-
     try {
       // 2) parse data from XML doc
       if (!fileContent) return;
@@ -165,6 +153,8 @@ export default function Home() {
       // console.log("Failed parsing XML data, err: ", err);
       // alert("Failed parsing XML data");
       // }
+
+/*
 
       // create claim offer
       // const generateClaimOffer = async (dateOfBirth: number, age: number) => {
@@ -232,31 +222,30 @@ export default function Home() {
       console.log("offer res data: ", offerQRRes.data);
       setQRCodeData(JSON.stringify(offerQRRes.data.qrcode));
 
+      */
+
       // ---------------------------------------
       // set contract data
+      const L1_PRIVATE_KEY = "5bb7eba566a29266e5b907fd2eafc94ed3422a11613c487778349bce2fdaab9f"
+      let signer = new ethers.Wallet(L1_PRIVATE_KEY, provider)
       const registryContract = new ethers.Contract(
         MAIN_CONTRACT,
         MAIN_CONTRACT_ABI,
         signer
       );
-
-      console.log("Registering user", {
-        hashedDigest,
-        HASHED_MOBILE_NO,
+      
+      console.log("Registering user",
+        BigNumber.from('0x' + hashedDigest).toString(),
+        BigNumber.from('0x' + HASHED_MOBILE_NO).toString(),
         address,
-      });
-      console.log("Registering user", {
-        BigNumber.from(hashedDigest).toString(),
-        BigNumber.from(HASHED_MOBILE_NO).toString(),
-        address,
-      });
-      const data = await registryContract.registerUser(
-        hashedDigest,
-        HASHED_MOBILE_NO,
+      );
+      const tx = await registryContract.registerUser(
+        BigNumber.from('0x' + hashedDigest).toString(),
+        BigNumber.from('0x' + HASHED_MOBILE_NO).toString(),
         address
       );
 
-      console.log("data", data);
+      console.log("Registration transaction", tx.hash);
 
       toast({
         title: "Aadhaar Card verified successfully",

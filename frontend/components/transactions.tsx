@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useProvider, useAccount } from "wagmi";
+import { useProvider, useSigner, useAccount } from "wagmi";
 import { ethers } from "ethers";
 import { Heading, Text, VStack } from "@chakra-ui/react";
 import {
@@ -45,6 +45,8 @@ export const PendingTransactions = () => {
   const toast = useToast();
 
   const provider = useProvider();
+  const { data: signer } = useSigner();
+
   const { isConnected, address } = useAccount();
 
   const [loading, setLoading] = useState(false);
@@ -173,8 +175,36 @@ export const PendingTransactions = () => {
               recepientAddress={recepientPhoneNumber}
               token={`${token}`}
               amount={amount}
-              onCloseClick={(id) => {
+              onCloseClick={async (id) => {
+                if (!signer) return;
                 console.log("remove: ", id);
+
+                const contract = new ethers.Contract(
+                  MAIN_CONTRACT,
+                  MAIN_CONTRACT_ABI,
+                  signer
+                );
+
+                toast({
+                  title: "removing transaction....",
+                  status: "info",
+                  duration: 3000,
+                  isClosable: true,
+                });
+
+                const tx = await contract.removePaymentFromQueue(id, {
+                  gasPrice: 50000000000,
+                });
+                await tx.wait();
+
+                toast({
+                  title: "Removed Transaction",
+                  status: "info",
+                  duration: 3000,
+                  isClosable: true,
+                });
+
+                fetchPendingTxs();
               }}
             />
           );

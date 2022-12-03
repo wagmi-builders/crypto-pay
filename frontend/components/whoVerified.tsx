@@ -15,7 +15,6 @@ import { sha256 } from "js-sha256";
 
 import { CustomFormControl, CustomFormLabel, CustomInput } from "./Input";
 import { useENS } from "../hooks/useENS";
-import { isAddress, isENSName, isLensHandle } from "../utils/helpers";
 import { BigNumber, constants, ethers } from "ethers";
 import { MAIN_CONTRACT } from "../consts";
 

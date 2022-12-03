@@ -2,9 +2,13 @@ import "react-phone-number-input/style.css";
 
 import Head from "next/head";
 
-import { ethers } from "ethers";
 import { useState } from "react";
 import { useProvider } from "wagmi";
+
+import { XMLParser } from "fast-xml-parser";
+import { ISSUER_ID, POLYGON_API_BASE_URL, SCHEMA_ID } from "../consts";
+import { sha256 } from "js-sha256";
+import { ethers } from "ethers";
 
 import {
   Box,
@@ -12,8 +16,6 @@ import {
   Center,
   FormErrorMessage,
   Heading,
-  HStack,
-  Link,
   Text,
   VStack,
 } from "@chakra-ui/react";
@@ -25,18 +27,19 @@ import {
   CustomInput,
 } from "../components/Input";
 
-import { XMLParser } from "fast-xml-parser";
 import { FileUploader } from "react-drag-drop-files";
-import axios from "axios";
-import { ISSUER_ID, POLYGON_API_BASE_URL, SCHEMA_ID } from "../consts";
-import { sha256 } from "js-sha256";
 import { SendCrypto } from "../components/send";
 import { About } from "../components/about";
 import { QRDialog } from "../components/QRDialog";
+import { Header } from "../components/Header";
+import axios from "axios";
+
+import { useToast, Divider } from "@chakra-ui/react";
 
 const fileTypes = ["XML"];
 
 export default function Home() {
+  const toast = useToast();
   const provider = useProvider();
 
   const [loading, setLoading] = useState(false);
@@ -166,37 +169,19 @@ export default function Home() {
           limitedClaims: 1,
         },
       });
-
-      console.log("data:", offerRes);
-
-      const offerIdString = offerRes.data.id;
-      OFFER_ID = offerIdString;
-      // } catch (err) {
-      // console.log("Failed generating claims, err: ", err);
-      // alert("Failed generating claims");
-      // }
-
-      // generate QR code
-      if (!OFFER_ID) return;
-
-      // get offer QR data
-      // try {
-      const offerQRRes = await axios.post(
-        `${POLYGON_API_BASE_URL}/v1/offers-qrcode/${OFFER_ID}`
-      );
-
-      console.log("offer res data: ", offerQRRes.data);
-
-      setQRCodeData(JSON.stringify(offerQRRes.data.qrcode));
-      // } catch (err) {
-      // console.log("err generating QR code, err: ", err);
-      // alert("error generating QR code");
-      // }
     } catch (error) {
       console.log("Unable to generate QR code for Claiming data: ", error);
     }
 
     setLoading(false);
+
+    toast({
+      title: "Aadhaar Card verified successfully",
+      description: "We've created the Polygon ID Claim for you.",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
   };
 
   return (
@@ -211,60 +196,20 @@ export default function Home() {
         />
       </Head>
 
-      <Center width={450} display="flex" flexDirection="column" mx="auto">
-        <HStack mt={20} mb={10} spacing={10}>
-          <Text
-            _hover={{
-              cursor: "pointer",
-            }}
-            onClick={() => {
-              document.querySelector("#claim")?.scrollIntoView({
-                behavior: "smooth",
-              });
-            }}
-          >
-            Claim
-          </Text>
-          <Text
-            _hover={{
-              cursor: "pointer",
-            }}
-            onClick={() => {
-              document.querySelector("#verify")?.scrollIntoView({
-                behavior: "smooth",
-              });
-            }}
-          >
-            Verify
-          </Text>
-          <Text
-            _hover={{
-              cursor: "pointer",
-            }}
-            onClick={() => {
-              document.querySelector("#send")?.scrollIntoView({
-                behavior: "smooth",
-              });
-            }}
-          >
-            Send Crypto
-          </Text>
-          <Text
-            // href="/#about"
-            _hover={{
-              cursor: "pointer",
-            }}
-            onClick={() => {
-              document.querySelector("#about")?.scrollIntoView({
-                behavior: "smooth",
-              });
-            }}
-          >
-            About
-          </Text>
+      <Center
+        width={500}
+        display="flex"
+        flexDirection="column"
+        mx="auto"
+        css={{
+          borderLeft: "1px solid #F1F1F1",
+          borderRight: "1px solid #F1F1F1",
+          padding: "0 40px",
 
-          {/* <Link href="/about">Send</Link> */}
-        </HStack>
+          boxShadow: "0px 0px 50px 1px rgba(0,0,0,0.05)",
+        }}
+      >
+        <Header />
 
         <VStack mb="30" alignItems="center">
           <Heading id="claim">eAadhaar</Heading>

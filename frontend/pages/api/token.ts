@@ -7,10 +7,7 @@ type Data = {
   token: string;
 };
 
-export default async function generateToken(
-  req: NextApiRequest,
-  res: NextApiResponse<Data>
-) {
+export const generateTokenFunc = async () => {
   const tokenRes = await axios({
     method: "post",
     url: `${POLYGON_API_BASE_URL}/v1/orgs/sign-in`,
@@ -25,6 +22,15 @@ export default async function generateToken(
   });
 
   const token = tokenRes.data.token || "";
+
+  return token;
+};
+
+export default async function generateToken(
+  req: NextApiRequest,
+  res: NextApiResponse<Data>
+) {
+  const token = await generateTokenFunc();
 
   res.status(200).json({ token });
 }

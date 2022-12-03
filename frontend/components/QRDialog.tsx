@@ -52,7 +52,7 @@ export const QRDialog = ({ data }: { data: string }) => {
             </AlertDialogBody>
 
             <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={() => setOpen(false)}>
+              <Button w="100%" ref={cancelRef} onClick={() => setOpen(false)}>
                 Done
               </Button>
             </AlertDialogFooter>

@@ -16,7 +16,7 @@ import {
 import { Field, Form, Formik } from "formik";
 
 import { CustomFormControl, CustomFormLabel, CustomInput } from "./Input";
-import { SERVER_URL } from "../consts";
+import { CURRENCIES, SERVER_URL } from "../consts";
 import { QRDialog } from "./QRDialog";
 
 import { MAIN_CONTRACT } from "../consts";
@@ -117,7 +117,9 @@ export const SendCrypto = () => {
         initialValues={{
           mobileNumber: "",
           amount: 0,
-          token: "0x0000000000000000000000000000000000001010-18",
+          token: `${Object.keys(CURRENCIES)[0]}-${
+            Object.values(CURRENCIES)[0].decimal
+          }`,
         }}
         onSubmit={onFormSignupSubmit}
       >
@@ -160,15 +162,20 @@ export const SendCrypto = () => {
                     placeholder="Select Token"
                     size="lg"
                     bg="#FFF"
-                    defaultValue="0x0000000000000000000000000000000000001010-18" // USDC
+                    defaultValue={`${Object.keys(CURRENCIES)[0]}-${
+                      Object.values(CURRENCIES)[0].decimal
+                    }`}
                     {...field}
                   >
-                    <option value="0x0000000000000000000000000000000000001010-18">
-                      MATIC
-                    </option>
-                    <option value="0x2791bca1f2de4661ed88a30c99a7a9449aa84174-6">
-                      USDC
-                    </option>
+                    {Object.keys(CURRENCIES).map((token, i) => {
+                      const { symbol, decimal } = CURRENCIES[token];
+
+                      return (
+                        <option key={i} value={`${token}-${decimal}`}>
+                          {symbol}
+                        </option>
+                      );
+                    })}
                   </Select>
                   {form.errors.name}
                 </>

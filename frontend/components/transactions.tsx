@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import {useProvider} from "wagmi";
-import {ethers, BigNumber} from "ethers";
+import { useProvider, useAccount } from "wagmi";
+import { ethers } from "ethers";
 import { Heading, Text, VStack } from "@chakra-ui/react";
 import {
   Alert,
@@ -8,84 +8,84 @@ import {
   AlertTitle,
   AlertDescription,
   Button,
+  useToast,
 } from "@chakra-ui/react";
 
 // import { QRCode } from 'react-qr-svg';
-// import proofRequest from '../../proofRequest';
-import { MAIN_CONTRACT } from "../consts";
+import proofRequest from "../proofOfRequest";
+import { MAIN_CONTRACT, SCHEMA_NAME, SCHEMA_URL } from "../consts";
 
 import MAIN_CONTRACT_ABI from "../abi/main.json";
+import { TXCard } from "./txCard";
+import { QRDialog } from "./QRDialog";
 
-
-export const executeTransaction = () => {
- 
+export const createProofRequest = () => {
   let qrProofRequestJson: any = { ...proofRequest };
+
   qrProofRequestJson.body.transaction_data.contract_address = MAIN_CONTRACT;
   qrProofRequestJson.body.scope[0].rules.query.req = {
     // NOTE: this value needs to match the Attribute name in https://platform-test.polygonid.com
-    "verified": {
-      "$eq": 1
-    }
+    verified: {
+      $eq: 1,
+    },
   };
   // NOTE1: if you change this you need to resubmit the erc10|erc721ZKPRequest
   // NOTE2: type is case-sensitive
   qrProofRequestJson.body.scope[0].rules.query.schema = {
-    "url": "https://s3.eu-west-1.amazonaws.com/polygonid-schemas/642881e4-b68c-4721-81a6-98ac3b335869.json-ld",
-    "type": "dAadhaar"
+    url: SCHEMA_URL,
+    type: SCHEMA_NAME,
   };
 
-  // show the above QR code.
-  // const App = () => {
+  qrProofRequestJson.body.reason = "2FA Verification";
 
-  //   return (
-  //     <div className="App p-10">
-  //       <QRCode
-  //         level="Q"
-  //         style={{ width: 256 }}
-  //         value={JSON.stringify(qrProofRequestJson)}
-  //       />
-  //     </div>
-  //   )
-  // };
-}
+  return JSON.stringify(qrProofRequestJson);
+};
 
 export const PendingTransactions = () => {
+  const toast = useToast();
+
   const provider = useProvider();
+  const { isConnected, address } = useAccount();
 
   const [loading, setLoading] = useState(false);
-  const [noOfTxs, setNoOfTxs] = useState(0);
-  
-  const contract = new ethers.Contract(
-    MAIN_CONTRACT,
-    MAIN_CONTRACT_ABI,
-    provider
-  );
+  const [txs, setTXS] = useState([]);
+
+  const [qrCodeData, setQRCodeData] = useState("");
+
+  const filteredTxs = txs.filter((tx) => tx?.valid) || [];
+
+  const proveAndExecuteTx = async () => {
+    setQRCodeData("");
+
+    const qrData = await createProofRequest();
+    setQRCodeData(qrData);
+  };
 
   // // fetch queued payments
-  // const userAddress = '0x87ef4726e87a685f882861c3f14d397e293a1a5f';
-  // const index = 0;
-  // const pendingTransactionsForUser = await contract.queuedPayments(
-  //   userAddress,
-  //   index
-  // )
-  // console.log('pendingTransactionsForUser', pendingTransactionsForUser)
+  const fetchPendingTxs = async () => {
+    setLoading(true);
 
-  // // remove queued payments
-  // const L1_PRIVATE_KEY = ''
-  // const signer = new ethers.Wallet(
-  //   L1_PRIVATE_KEY,
-  //   provider
-  // )
-  // const tx = await contract.removePaymentFromQueue(
-  //   index,
-  //   signer
-  // )
-  
+    const contract = new ethers.Contract(
+      MAIN_CONTRACT,
+      MAIN_CONTRACT_ABI,
+      provider
+    );
+
+    const pendingTransactionsForUser = await contract.getQueuedPayments(
+      address
+      // index
+    );
+
+    console.log("pendingTransactionsForUser", pendingTransactionsForUser);
+
+    setTXS(pendingTransactionsForUser);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    setInterval(() => {
-      // setNoOfTxs()
+    if (!isConnected) return;
 
-    }, 3000);
+    fetchPendingTxs();
   }, []);
 
   return (
@@ -107,26 +107,81 @@ export const PendingTransactions = () => {
         >
           <AlertIcon boxSize="40px" mr={0} />
           <AlertTitle mt={4} mb={1} fontSize="lg">
-            You have {noOfTxs} Pending Transactions
+            You have {filteredTxs.length} Pending Transactions
           </AlertTitle>
-          {}
           <AlertDescription maxWidth="sm">
             Prove your Identity to execute pending transactions
           </AlertDescription>
 
-          {noOfTxs ? (
+          <VStack w="100%">
             <Button
-              colorScheme="blue"
-              type="submit"
+              colorScheme="green"
+              type="Reload"
               mt={20}
               width="100%"
               isLoading={loading}
+              // leftIcon={<}
+              onClick={async () => {
+                await fetchPendingTxs();
+
+                toast({
+                  title: "Fetched Latest pending transactions",
+                  status: "success",
+                  duration: 3000,
+                  isClosable: true,
+                });
+              }}
             >
-              Prove & Execute
+              Reload
             </Button>
-          ) : null}
+
+            {filteredTxs.length ? (
+              <Button
+                colorScheme="blue"
+                type="submit"
+                mt={20}
+                width="100%"
+                // isLoading={loading}
+                onClick={proveAndExecuteTx}
+                disabled={loading}
+              >
+                Prove & Execute
+              </Button>
+            ) : null}
+          </VStack>
         </Alert>
       </VStack>
+
+      <VStack spacing="10px" mt="20px">
+        {filteredTxs.map((tx, i) => {
+          const {
+            amount: amountBG,
+            recipientPhoneNumber: recepientPhoneNumberBG,
+            token,
+          } = tx;
+
+          const recepientPhoneNumber = ethers.BigNumber.from(
+            recepientPhoneNumberBG
+          ).toString();
+
+          const amount = ethers.BigNumber.from(amountBG).toString();
+
+          return (
+            <TXCard
+              key={i}
+              id={i}
+              recepientAddress={recepientPhoneNumber}
+              token={`${token}`}
+              amount={amount}
+              onCloseClick={(id) => {
+                console.log("remove: ", id);
+              }}
+            />
+          );
+        })}
+      </VStack>
+
+      <QRDialog data={qrCodeData} />
     </>
   );
 };

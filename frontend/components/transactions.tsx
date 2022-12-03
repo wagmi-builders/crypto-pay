@@ -92,7 +92,7 @@ export const PendingTransactions = () => {
 
   return (
     <>
-      <VStack mt={100}>
+      <VStack mt={150}>
         <Heading id="about">Pending Transactions</Heading>
         <Text>2FA - Your Pending Transactions</Text>
       </VStack>

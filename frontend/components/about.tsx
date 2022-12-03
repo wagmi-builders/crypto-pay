@@ -3,7 +3,7 @@ import { Heading, Text, VStack } from "@chakra-ui/react";
 export const About = () => {
   return (
     <>
-      <VStack mt={100}>
+      <VStack mt={150}>
         <Heading id="about">About</Heading>
         <Text>Brings privacy first KYC into Blockchain using Polygon ID</Text>
       </VStack>

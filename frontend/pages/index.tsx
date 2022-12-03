@@ -303,9 +303,9 @@ export default function Home() {
 
           <VStack mb="30" alignItems="center">
             <Heading id="claim">eAadhaar</Heading>
-            <Text>
-              Verify your Aadhaar on Blockchain with ZK technology using Polygon
-              ID
+            <Text textAlign="center">
+              Verify your Aadhaar on Blockchain and generate claims for your
+              data using Polygon ID.
             </Text>
           </VStack>
 

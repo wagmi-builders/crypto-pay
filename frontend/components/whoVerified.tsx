@@ -102,7 +102,7 @@ export const WhosVerified = () => {
 
   return (
     <>
-      <VStack mt={100}>
+      <VStack mt={150}>
         <Heading id="who-verified">Who&apos;s Verif ied</Heading>
         <Text>
           Check who&apos;s verif ied, type ETH Address, ENS or Lens handle

@@ -133,7 +133,7 @@ export const SendCrypto = () => {
 
   return (
     <>
-      <VStack mt={100}>
+      <VStack mt={150}>
         <Heading id="send">Send Crypto</Heading>
         <Text>
           Send crypto to eAadhaar verified address using their Phone Number

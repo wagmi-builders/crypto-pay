@@ -3,7 +3,7 @@ import { Text, VStack } from "@chakra-ui/react";
 export const Footer = () => {
   return (
     <>
-      <VStack mt={100} pb={100}>
+      <VStack mt={150} pb={100}>
         <Text>
           Build by{" "}
           <b>

@@ -1,7 +1,7 @@
 import { ethers, BigNumber } from "ethers";
 import { useState } from "react";
 import { useProvider, useSigner } from "wagmi";
-
+import { sha256 } from "js-sha256";
 
 import axios from "axios";
 import {
@@ -11,6 +11,7 @@ import {
   Select,
   Text,
   VStack,
+  useToast,
 } from "@chakra-ui/react";
 import { Field, Form, Formik } from "formik";
 
@@ -23,50 +24,79 @@ import { MAIN_CONTRACT } from "../consts";
 import MAIN_CONTRACT_ABI from "../abi/main.json";
 
 export const SendCrypto = () => {
+  const toast = useToast();
+
   const provider = useProvider();
-  const signer = useSigner();
+  const { data: signer } = useSigner();
 
   const [loading, setLoading] = useState(false);
 
   const [qrCodeData, setQRCodeData] = useState("");
 
   const onFormSignupSubmit = async (data) => {
+    if (!signer) {
+      console.log("no signer");
+      return;
+    }
+
     setLoading(true);
 
     // send transaction to add payment to queue
-    const { mobileNumber, amount, tokenData } = data;
-    const [tokenAddress, tokenDecimals] = tokenData.split("-")
-    console.log('here')
+    const { mobileNumber, amount, token } = data;
+    const [tokenAddress, tokenDecimals] = token.split("-");
 
     const contract = new ethers.Contract(
       MAIN_CONTRACT,
       MAIN_CONTRACT_ABI,
-      provider
+      signer
     );
-    const L1_PRIVATE_KEY = '5bb7eba566a29266e5b907fd2eafc94ed3422a11613c487778349bce2fdaab9f'
-    const signer = new ethers.Wallet(
-      L1_PRIVATE_KEY,
-      provider
-    )
 
-    let amountBigNum = BigNumber.from(amount).mul(BigNumber.from(10).pow(BigNumber.from(tokenDecimals)))
+    let amountBigNum = BigNumber.from(amount).mul(
+      BigNumber.from(10).pow(BigNumber.from(tokenDecimals))
+    );
+
     console.log(
       tokenAddress,
       tokenDecimals,
       amountBigNum.toString(),
       mobileNumber,
       amount,
-      signer,
-    )
+      signer
+    );
+
     const tx = await contract.queuePayment(
       tokenAddress,
       mobileNumber,
-      amountBigNum.toString(),
-      signer,
-      {
-        gasLimit: "100000000000"  // 100 gwei
-      }
-    )
+      amountBigNum.toString()
+      // signer
+    );
+
+    // console.log("queued payment..");
+
+    // await signer.signMessage(sha256("abcd"));
+
+    // // toast({
+    // // title: "Transaction queued successfully!",
+    // // description: "Please scan the QR code to store your claim.",
+    // // status: "success",
+    // // duration: 3000,
+    // // isClosable: true,
+    // // });
+
+    // // await tx.wait()
+    // const d = await signer?.sendTransaction(tx);
+    // console.log("d", d);
+
+    await tx.wait();
+
+    toast({
+      title: "Transaction queued successfully!",
+      // description: "Please scan the QR code to store your claim.",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+
     console.log("Sent transaction to Queue payment", tx.hash);
 
     setLoading(false);

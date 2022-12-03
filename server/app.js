@@ -110,7 +110,9 @@ async function GetAuthRequest(req, res) {
 
 // Callback verifies the proof after sign-in callbacks
 async function Callback(req, res) {
-  //   console.log("request body: ");
+  console.log("request body: ");
+  console.log(req);
+
   //   console.log(req.body, req.query);
 
   // Unpack the proof

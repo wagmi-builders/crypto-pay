@@ -20,7 +20,7 @@ export const Header = () => {
           cursor: "pointer",
         }}
         onClick={() => {
-          document.querySelector("#verify")?.scrollIntoView({
+          document.querySelector("#who-verified")?.scrollIntoView({
             behavior: "smooth",
           });
         }}

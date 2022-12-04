@@ -146,8 +146,8 @@ export default function Home() {
 
       aadhaarHashedDigest = Number(
         // BigNumber.from("0x" + "6def8c7db01870f0e504707032d2e2093d0f339d").toString(),
-        BigNumber.from("0x" + "abcd328479234").toString()
-        // BigNumber.from("0x" + hashedDigest).toString()
+        // BigNumber.from("0x" + "abcd328479234").toString()
+        BigNumber.from("0x" + hashedDigest.slice(0, 13)).toString()
       );
 
       // } catch (err) {

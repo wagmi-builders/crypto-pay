@@ -258,7 +258,7 @@ export default function Home() {
         }
       );
 
-      console.log("Registration done", tx.hash);
+      console.log("Registration done", "https://mumbai.polygonscan.com/tx/" + tx.hash);
     } catch (error) {
       console.log("Unable to generate QR code for Claiming data: ", error);
     }

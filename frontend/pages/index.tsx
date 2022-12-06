@@ -25,9 +25,10 @@ import {
   Heading,
   Text,
   VStack,
-  Image,
 } from "@chakra-ui/react";
 import { Field, Form, Formik } from "formik";
+
+import Image from "next/image";
 
 import {
   CustomFormControl,
@@ -52,6 +53,7 @@ import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 import REGISTRY_CONTRACT_ABI from "../../artifacts/contracts/Registry.sol/Registry.json";
+import { PainPoints } from "../components/painpoints";
 
 const fileTypes = ["XML"];
 
@@ -284,7 +286,7 @@ export default function Home() {
         width="fit-content"
         mx="auto"
       >
-        <Image src="/left.png" alt="" width={300} height="100%" />
+        <Image src="/left.png" alt="" width={300} height={2260} />
 
         <Box
           width={500}
@@ -302,10 +304,10 @@ export default function Home() {
           <Header />
 
           <VStack mb="30" alignItems="center">
-            <Heading id="claim">eAadhaar</Heading>
+            <Heading id="claim">Aadhaar.eth</Heading>
             <Text textAlign="center">
-              Verify your Aadhaar on Blockchain and generate claims for your
-              data using <b>@Polygon ID</b>.
+              Verify your Aadhaar on Blockchain and generate verif iable claims
+              for your data using <b>@Polygon ID</b>.
             </Text>
           </VStack>
 
@@ -405,11 +407,12 @@ export default function Home() {
           <SendCrypto />
           <PendingTransactions />
           <About />
+          <PainPoints />
           <UseCases />
           <Footer />
         </Box>
 
-        <Image src="/right.png" alt="" width={300} height="100%" />
+        <Image src="/right.png" alt="" width={300} height={2260} />
       </Center>
     </>
   );

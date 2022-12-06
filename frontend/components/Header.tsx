@@ -14,7 +14,7 @@ export const Header = () => {
         <AlertIcon />
         {/* <AlertTitle>Warning</AlertTitle> */}
         <AlertDescription>
-          This project is a test so do NOT upload any sensitive information
+          This project is a test so do NOT upload any private information
         </AlertDescription>
       </Alert>
 

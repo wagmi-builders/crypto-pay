@@ -11,24 +11,45 @@ export const UseCases = () => {
       <VStack spacing="30px">
         <UseCaseCard
           image=""
-          title="Safe prev. Gnosis Safe"
+          title="2FA Wallet"
           description="
-          Stop the vote to get signed & executed by a user until he get 2FA by eAadhaar using Polygon ID.
-          So even if the user has comprised the private key, the hacker won't be able to sign until he get's 2FA."
+          The above flow can be generalized to work with all types of transactions. We would have to add support for
+          passing in Generic calldata which will be executed upon aadhar verification. This would work very well with
+          Account abstraction as well."
         />
         <UseCaseCard
           image=""
-          title="Push"
-          description="Do Chat Moderation by checking if the person is eAadhaar verif ied. Also possibly to open channels & chats for only Indian verif ied people."
+          title="Finance applications"
+          description="Once we have identity on-chain we can build more complex financial instruments like credit scores,
+          undercollateralizd lending, send salaries on-chain, easier automated taxation etc.
+          "
         />
         <UseCaseCard
           image=""
-          title="SDK"
+          title="Age Proofs"
+          description="We can issue age proofs claims using Aadhar in a permissionless manner. We often hear age proofs
+          as a primary example of ZK proofs and this flow along with Aadhaar finally makes it productionizable. Age proofs 
+          can be used in DAOs and Defi.
+          "
+        />
+        <UseCaseCard
+          image=""
+          title="Gated communities"
           description="
-          Publish an on-chain & off-chain database to store which identities has been verified, and share across all major blockchain systems 
+          Similar to token gated dapps, we can build claim gated dapps where the user can join the community only if
+          the user has a verified aadhar claim in their Polygon ID wallet. For example, India DAO for all Indians
+          building in Web3.
           "
         />
       </VStack>
     </>
   );
 };
+
+
+// use meme in presentation.
+// immediate usecase
+// simple and easy to understand
+// web2 flow (understandable flow)
+// don't clutter, no bellls and whitsles.
+// take a complex protocol and make it easier to use (like gnosis safe, and maker and compound etc.)
